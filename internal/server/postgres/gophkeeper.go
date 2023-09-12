@@ -25,7 +25,8 @@ type Gophkeeper struct {
 
 	PasswordEncoding *base64.Encoding
 
-	DSN           string
+	Source DatabaseSource
+
 	TokenSecret   []byte
 	TokenLifespan time.Duration
 	BlobsDir      string
@@ -151,7 +152,7 @@ func (r *Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (goph
 
 // Run implements Runnable.
 func (r *Gophkeeper) Run(ctx context.Context) error {
-	var connection, connectError = pgx.Connect(ctx, r.DSN)
+	var connection, connectError = r.Source.Connect(ctx)
 	if connectError != nil {
 		return connectError
 	}

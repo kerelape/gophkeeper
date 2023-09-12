@@ -33,7 +33,7 @@ func (s *Server) Run(ctx context.Context) error {
 		gophkeeper = postgres.Gophkeeper{
 			PasswordEncoding: base64.RawStdEncoding,
 
-			DSN:      s.DatabaseDSN,
+			Source:   (postgres.DSNSource)(s.DatabaseDSN),
 			BlobsDir: s.BlobsDir,
 
 			TokenSecret:   s.TokenSecret,
