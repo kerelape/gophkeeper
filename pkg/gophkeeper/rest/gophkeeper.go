@@ -1,4 +1,4 @@
-package gophkeeper
+package rest
 
 import (
 	"bytes"
@@ -7,21 +7,23 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
 )
 
 // ErrIncompatibleAPI is returns when API is not compatible with implementation.
 var ErrIncompatibleAPI = errors.New("incompatable API")
 
-// RestGophkeeper is a remote gophkeeper.
-type RestGophkeeper struct {
+// Gophkeeper is a remote gophkeeper.
+type Gophkeeper struct {
 	Client http.Client
 	Server string
 }
 
-var _ Gophkeeper = (*RestGophkeeper)(nil)
+var _ gophkeeper.Gophkeeper = (*Gophkeeper)(nil)
 
 // Register implements Gophkeeper.
-func (g *RestGophkeeper) Register(ctx context.Context, credential Credential) error {
+func (g *Gophkeeper) Register(ctx context.Context, credential gophkeeper.Credential) error {
 	var endpoint = fmt.Sprintf("%s/register", g.Server)
 	var content, marshalError = json.Marshal(
 		map[string]any{
@@ -47,7 +49,7 @@ func (g *RestGophkeeper) Register(ctx context.Context, credential Credential) er
 	defer response.Body.Close()
 	switch response.StatusCode {
 	case http.StatusConflict:
-		return ErrIdentityDuplicate
+		return gophkeeper.ErrIdentityDuplicate
 	case http.StatusCreated:
 		return nil
 	default:
@@ -59,7 +61,7 @@ func (g *RestGophkeeper) Register(ctx context.Context, credential Credential) er
 }
 
 // Authenticate implements Gophkeeper.
-func (g *RestGophkeeper) Authenticate(ctx context.Context, credential Credential) (Token, error) {
+func (g *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Credential) (gophkeeper.Token, error) {
 	var endpoint = fmt.Sprintf("%s/login", g.Server)
 	var content, marshalError = json.Marshal(
 		map[string]any{
@@ -68,7 +70,7 @@ func (g *RestGophkeeper) Authenticate(ctx context.Context, credential Credential
 		},
 	)
 	if marshalError != nil {
-		return (Token)(""), marshalError
+		return (gophkeeper.Token)(""), marshalError
 	}
 	var request, requestError = http.NewRequestWithContext(
 		ctx,
@@ -76,21 +78,21 @@ func (g *RestGophkeeper) Authenticate(ctx context.Context, credential Credential
 		bytes.NewReader(content),
 	)
 	if requestError != nil {
-		return (Token)(""), requestError
+		return (gophkeeper.Token)(""), requestError
 	}
 	var response, postError = g.Client.Do(request)
 	if postError != nil {
-		return (Token)(""), postError
+		return (gophkeeper.Token)(""), postError
 	}
 	defer response.Body.Close()
 	switch response.StatusCode {
 	case http.StatusUnauthorized:
-		return (Token)(""), ErrBadCredential
+		return (gophkeeper.Token)(""), gophkeeper.ErrBadCredential
 	case http.StatusOK:
 		var token = response.Header.Get("Authorization")
-		return (Token)(token), nil
+		return (gophkeeper.Token)(token), nil
 	default:
-		return (Token)(""), errors.Join(
+		return (gophkeeper.Token)(""), errors.Join(
 			fmt.Errorf("unexpected response status: %d", response.StatusCode),
 			ErrIncompatibleAPI,
 		)
@@ -98,8 +100,8 @@ func (g *RestGophkeeper) Authenticate(ctx context.Context, credential Credential
 }
 
 // Identity implements Gophkeeper.
-func (g *RestGophkeeper) Identity(_ context.Context, token Token) (Identity, error) {
-	var identity = &RestIdentity{
+func (g *Gophkeeper) Identity(_ context.Context, token gophkeeper.Token) (gophkeeper.Identity, error) {
+	var identity = &Identity{
 		Client: g.Client,
 		Server: g.Server,
 		Token:  token,

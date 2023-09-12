@@ -6,9 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
-
 	"github.com/kerelape/gophkeeper/internal/cli"
+	"github.com/kerelape/gophkeeper/pkg/gophkeeper/rest"
 )
 
 func main() {
@@ -21,7 +20,7 @@ func main() {
 	}
 
 	var application = cli.CLI{
-		Gophkeeper: &gophkeeper.RestGophkeeper{
+		Gophkeeper: &rest.Gophkeeper{
 			Server: *server,
 			Client: http.Client{},
 		},

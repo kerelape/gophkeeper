@@ -1,4 +1,4 @@
-package gophkeeper
+package rest
 
 import (
 	"bytes"
@@ -8,22 +8,24 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
 )
 
 // ErrServerIsDown is returns when server returned an internal server error.
 var ErrServerIsDown = errors.New("server is down")
 
-// RestIdentity is rest identity.
-type RestIdentity struct {
+// Identity is rest identity.
+type Identity struct {
 	Client http.Client
 	Server string
-	Token  Token
+	Token  gophkeeper.Token
 }
 
-var _ Identity = (*RestIdentity)(nil)
+var _ gophkeeper.Identity = (*Identity)(nil)
 
 // StorePiece implements Identity.
-func (i *RestIdentity) StorePiece(ctx context.Context, piece Piece, password string) (ResourceID, error) {
+func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, password string) (gophkeeper.ResourceID, error) {
 	var endpoint = fmt.Sprintf("%s/vault/piece", i.Server)
 	var content, contentError = json.Marshal(
 		map[string]any{
@@ -52,7 +54,7 @@ func (i *RestIdentity) StorePiece(ctx context.Context, piece Piece, password str
 	switch response.StatusCode {
 	case http.StatusCreated:
 		var content struct {
-			RID ResourceID `json:"rid"`
+			RID gophkeeper.ResourceID `json:"rid"`
 		}
 		if err := json.NewDecoder(response.Body).Decode(&content); err != nil {
 			return -1, errors.Join(
@@ -62,7 +64,7 @@ func (i *RestIdentity) StorePiece(ctx context.Context, piece Piece, password str
 		}
 		return content.RID, nil
 	case http.StatusUnauthorized:
-		return -1, ErrBadCredential
+		return -1, gophkeeper.ErrBadCredential
 	case http.StatusInternalServerError:
 		return -1, ErrServerIsDown
 	default:
@@ -74,7 +76,7 @@ func (i *RestIdentity) StorePiece(ctx context.Context, piece Piece, password str
 }
 
 // RestorePiece implements Identity.
-func (i *RestIdentity) RestorePiece(ctx context.Context, rid ResourceID, password string) (Piece, error) {
+func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, password string) (gophkeeper.Piece, error) {
 	var endpoint = fmt.Sprintf("%s/vault/piece/%d", i.Server, rid)
 	var request, requestError = http.NewRequestWithContext(
 		ctx,
@@ -82,29 +84,29 @@ func (i *RestIdentity) RestorePiece(ctx context.Context, rid ResourceID, passwor
 		nil,
 	)
 	if requestError != nil {
-		return Piece{}, requestError
+		return gophkeeper.Piece{}, requestError
 	}
 	request.Header.Set("Authorization", (string)(i.Token))
 	request.Header.Set("X-Password", password)
 
 	var response, responseError = i.Client.Do(request)
 	if responseError != nil {
-		return Piece{}, responseError
+		return gophkeeper.Piece{}, responseError
 	}
 	switch response.StatusCode {
 	case http.StatusOK:
 		var content = make(map[string]any)
 		if err := json.NewDecoder(response.Body).Decode(&content); err != nil {
-			return Piece{}, errors.Join(
+			return gophkeeper.Piece{}, errors.Join(
 				fmt.Errorf("parse response: %w", err),
 				ErrIncompatibleAPI,
 			)
 		}
-		var piece Piece
+		var piece gophkeeper.Piece
 		if meta, ok := content["meta"].(string); ok {
 			piece.Meta = meta
 		} else {
-			return Piece{}, errors.Join(
+			return gophkeeper.Piece{}, errors.Join(
 				fmt.Errorf("invalid response body"),
 				ErrIncompatibleAPI,
 			)
@@ -112,25 +114,25 @@ func (i *RestIdentity) RestorePiece(ctx context.Context, rid ResourceID, passwor
 		if content, ok := content["content"].(string); ok {
 			var decodedContent, decodedContentError = base64.RawStdEncoding.DecodeString(content)
 			if decodedContentError != nil {
-				return Piece{}, errors.Join(
+				return gophkeeper.Piece{}, errors.Join(
 					fmt.Errorf("decode content: %w", decodedContentError),
 					ErrIncompatibleAPI,
 				)
 			}
 			piece.Content = decodedContent
 		} else {
-			return Piece{}, errors.Join(
+			return gophkeeper.Piece{}, errors.Join(
 				fmt.Errorf("invalid response body"),
 				ErrIncompatibleAPI,
 			)
 		}
 		return piece, nil
 	case http.StatusUnauthorized:
-		return Piece{}, ErrBadCredential
+		return gophkeeper.Piece{}, gophkeeper.ErrBadCredential
 	case http.StatusInternalServerError:
-		return Piece{}, ErrServerIsDown
+		return gophkeeper.Piece{}, ErrServerIsDown
 	default:
-		return Piece{}, errors.Join(
+		return gophkeeper.Piece{}, errors.Join(
 			fmt.Errorf("unexpected response status: %d", response.StatusCode),
 			ErrIncompatibleAPI,
 		)
@@ -138,7 +140,7 @@ func (i *RestIdentity) RestorePiece(ctx context.Context, rid ResourceID, passwor
 }
 
 // StoreBlob implements Identity.
-func (i *RestIdentity) StoreBlob(ctx context.Context, blob Blob, password string) (ResourceID, error) {
+func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password string) (gophkeeper.ResourceID, error) {
 	var endpoint = fmt.Sprintf("%s/vault/blob", i.Server)
 	var request, requestError = http.NewRequestWithContext(
 		ctx,
@@ -160,14 +162,14 @@ func (i *RestIdentity) StoreBlob(ctx context.Context, blob Blob, password string
 	switch response.StatusCode {
 	case http.StatusCreated:
 		var content struct {
-			RID ResourceID `json:"rid"`
+			RID gophkeeper.ResourceID `json:"rid"`
 		}
 		if err := json.NewDecoder(response.Body).Decode(&content); err != nil {
 			return -1, ErrIncompatibleAPI
 		}
 		return content.RID, nil
 	case http.StatusUnauthorized:
-		return -1, ErrBadCredential
+		return -1, gophkeeper.ErrBadCredential
 	case http.StatusInternalServerError:
 		return -1, ErrServerIsDown
 	default:
@@ -179,7 +181,7 @@ func (i *RestIdentity) StoreBlob(ctx context.Context, blob Blob, password string
 }
 
 // RestoreBlob implements Identity.
-func (i *RestIdentity) RestoreBlob(ctx context.Context, rid ResourceID, password string) (Blob, error) {
+func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, password string) (gophkeeper.Blob, error) {
 	var endpoint = fmt.Sprintf("%s/vault/blob/%d", i.Server, rid)
 	var request, requestError = http.NewRequestWithContext(
 		ctx,
@@ -187,28 +189,28 @@ func (i *RestIdentity) RestoreBlob(ctx context.Context, rid ResourceID, password
 		nil,
 	)
 	if requestError != nil {
-		return Blob{}, requestError
+		return gophkeeper.Blob{}, requestError
 	}
 	request.Header.Set("Authorization", (string)(i.Token))
 	request.Header.Set("X-Password", password)
 
 	var response, responseError = i.Client.Do(request)
 	if responseError != nil {
-		return Blob{}, responseError
+		return gophkeeper.Blob{}, responseError
 	}
 	switch response.StatusCode {
 	case http.StatusOK:
-		var blob = Blob{
+		var blob = gophkeeper.Blob{
 			Meta:    response.Header.Get("X-Meta"),
 			Content: response.Body,
 		}
 		return blob, nil
 	case http.StatusUnauthorized:
-		return Blob{}, ErrBadCredential
+		return gophkeeper.Blob{}, gophkeeper.ErrBadCredential
 	case http.StatusInternalServerError:
-		return Blob{}, ErrServerIsDown
+		return gophkeeper.Blob{}, ErrServerIsDown
 	default:
-		return Blob{}, errors.Join(
+		return gophkeeper.Blob{}, errors.Join(
 			fmt.Errorf("unexpected response status: %d", response.StatusCode),
 			ErrIncompatibleAPI,
 		)
@@ -216,7 +218,7 @@ func (i *RestIdentity) RestoreBlob(ctx context.Context, rid ResourceID, password
 }
 
 // Delete implements Identity.
-func (i *RestIdentity) Delete(ctx context.Context, rid ResourceID) error {
+func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error {
 	var endpoint = fmt.Sprintf("%s/vault/%d", i.Server, rid)
 	var request, requestError = http.NewRequestWithContext(
 		ctx,
@@ -239,7 +241,7 @@ func (i *RestIdentity) Delete(ctx context.Context, rid ResourceID) error {
 	case http.StatusInternalServerError:
 		return ErrServerIsDown
 	case http.StatusNotFound:
-		return ErrResourceNotFound
+		return gophkeeper.ErrResourceNotFound
 	default:
 		return errors.Join(
 			fmt.Errorf("unexpected response code: %d", response.StatusCode),
@@ -249,7 +251,7 @@ func (i *RestIdentity) Delete(ctx context.Context, rid ResourceID) error {
 }
 
 // List implements Identity.
-func (i *RestIdentity) List(ctx context.Context) ([]Resource, error) {
+func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 	var endpoint = fmt.Sprintf("%s/vault", i.Server)
 	var request, requestError = http.NewRequestWithContext(
 		ctx,
@@ -271,20 +273,20 @@ func (i *RestIdentity) List(ctx context.Context) ([]Resource, error) {
 	case http.StatusOK:
 		var responseContent = make(
 			[]struct {
-				Meta string       `json:"meta"`
-				RID  ResourceID   `json:"rid"`
-				Type ResourceType `json:"type"`
+				Meta string                  `json:"meta"`
+				RID  gophkeeper.ResourceID   `json:"rid"`
+				Type gophkeeper.ResourceType `json:"type"`
 			},
 			0,
 		)
 		if err := json.NewDecoder(response.Body).Decode(&responseContent); err != nil {
 			return nil, err
 		}
-		var resources = make([]Resource, 0, len(responseContent))
+		var resources = make([]gophkeeper.Resource, 0, len(responseContent))
 		for _, responseResource := range responseContent {
 			resources = append(
 				resources,
-				Resource{
+				gophkeeper.Resource{
 					ID:   responseResource.RID,
 					Type: responseResource.Type,
 					Meta: responseResource.Meta,
@@ -293,7 +295,7 @@ func (i *RestIdentity) List(ctx context.Context) ([]Resource, error) {
 		}
 		return resources, nil
 	case http.StatusUnauthorized:
-		return nil, ErrBadCredential
+		return nil, gophkeeper.ErrBadCredential
 	case http.StatusInternalServerError:
 		return nil, ErrServerIsDown
 	default:
