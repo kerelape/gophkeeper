@@ -23,19 +23,6 @@ type (
 // ResourceID is id of a resource.
 type ResourceID int64
 
-// ResourceType is type of resource stored.
-type ResourceType int
-
-const (
-	// ResourceTypePiece is a resource type
-	// indicating a resource of type Piece.
-	ResourceTypePiece ResourceType = iota + 1
-
-	// ResourceTypeBlob is a reource type
-	// indicating a resource of type Blob.
-	ResourceTypeBlob
-)
-
 // Resource is a resource information.
 type Resource struct {
 	ID   ResourceID
