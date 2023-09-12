@@ -20,16 +20,6 @@ type (
 	}
 )
 
-// ResourceID is id of a resource.
-type ResourceID int64
-
-// Resource is a resource information.
-type Resource struct {
-	ID   ResourceID
-	Type ResourceType
-	Meta string
-}
-
 var (
 	// ErrResourceNotFound is returned when there is no
 	// resource with the ResourceID (or it's owned by another identity).
