@@ -49,6 +49,32 @@ func TestEntry(t *testing.T) {
 	})
 	t.Run("login", func(t *testing.T) {
 		t.Run("Existing identity", func(t *testing.T) {
+			t.Run("Non-JSON body", func(t *testing.T) {
+				var (
+					recorder = httptest.NewRecorder()
+					request  = httptest.NewRequest(
+						http.MethodPost,
+						"/login",
+						strings.NewReader(`_`),
+					)
+				)
+				handler.ServeHTTP(recorder, request)
+				var response = recorder.Result()
+				assert.Equal(t, http.StatusBadRequest, response.StatusCode, "expected to successfully login")
+			})
+			t.Run("Invalid body", func(t *testing.T) {
+				var (
+					recorder = httptest.NewRecorder()
+					request  = httptest.NewRequest(
+						http.MethodPost,
+						"/login",
+						strings.NewReader(`{}`),
+					)
+				)
+				handler.ServeHTTP(recorder, request)
+				var response = recorder.Result()
+				assert.Equal(t, http.StatusBadRequest, response.StatusCode, "expected to successfully login")
+			})
 			var (
 				recorder = httptest.NewRecorder()
 				request  = httptest.NewRequest(
@@ -83,6 +109,21 @@ func TestEntry(t *testing.T) {
 		t.Run("piece", func(t *testing.T) {
 			var rid int
 			t.Run("Store", func(t *testing.T) {
+				t.Run("Non-JSON body", func(t *testing.T) {
+					var (
+						recorder = httptest.NewRecorder()
+						request  = httptest.NewRequest(
+							http.MethodPut,
+							"/vault/piece",
+							strings.NewReader("_"),
+						)
+					)
+					request.Header.Set("Authorization", token)
+					request.Header.Set("X-Password", "qwerty")
+					handler.ServeHTTP(recorder, request)
+					var response = recorder.Result()
+					assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
+				})
 				var (
 					recorder = httptest.NewRecorder()
 					request  = httptest.NewRequest(
