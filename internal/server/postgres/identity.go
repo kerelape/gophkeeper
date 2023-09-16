@@ -3,10 +3,6 @@ package postgres
 import (
 	"bufio"
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"log"
@@ -16,15 +12,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	composedreadcloser "github.com/kerelape/gophkeeper/internal/composed_read_closer"
 	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/crypto/pbkdf2"
-)
-
-const (
-	keyLen  = 32
-	keyIter = 4096
 )
 
 // Identity is a postgres identity.
@@ -44,39 +33,13 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 		return -1, errors.Join(err, gophkeeper.ErrBadCredential)
 	}
 
-	var (
-		salt []byte = make([]byte, 8)
-		iv   []byte = make([]byte, 12)
-		key  []byte
-	)
-	if _, err := rand.Read(salt); err != nil {
-		return -1, err
-	}
-	if _, err := rand.Read(iv); err != nil {
-		return -1, err
-	}
-	key = pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New)
-	var block, blockError = aes.NewCipher(key)
-	if blockError != nil {
-		return -1, blockError
-	}
-	var aesgcm, aesgcmError = cipher.NewGCM(block)
-	if aesgcmError != nil {
-		return -1, aesgcmError
-	}
-	var content = aesgcm.Seal(nil, iv, piece.Content, nil)
-
 	var transaction, transactionError = i.Connection.Begin(ctx)
 	if transactionError != nil {
 		return -1, transactionError
 	}
 	defer transaction.Rollback(context.Background())
 
-	insertPieceResult := transaction.QueryRow(
-		ctx,
-		`INSERT INTO pieces(content, salt, iv) VALUES($1, $2, $3) RETURNING id`,
-		content, salt, iv,
-	)
+	insertPieceResult := transaction.QueryRow(ctx, `INSERT INTO pieces(content) VALUES($1) RETURNING id`, piece.Content)
 	var id int
 	if err := insertPieceResult.Scan(&id); err != nil {
 		return -1, err
@@ -106,10 +69,7 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 	var (
 		meta    string
 		content []byte
-		iv      []byte
-		salt    []byte
 	)
-
 	var queryResourceResult = i.Connection.QueryRow(
 		ctx,
 		`SELECT meta, resource FROM resources WHERE id = $1 AND owner = $2 AND type = $3`,
@@ -124,30 +84,16 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 	}
 	var queryPieceResult = i.Connection.QueryRow(
 		ctx,
-		`SELECT content, iv, salt FROM pieces WHERE id = $1`,
+		`SELECT content FROM pieces WHERE id = $1`,
 		id,
 	)
-	if err := queryPieceResult.Scan(&content, &iv, &salt); err != nil {
+	if err := queryPieceResult.Scan(&content); err != nil {
 		return gophkeeper.Piece{}, err
-	}
-
-	var key = pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New)
-	var block, blockError = aes.NewCipher(key)
-	if blockError != nil {
-		return gophkeeper.Piece{}, blockError
-	}
-	var aesgcm, aesgcmError = cipher.NewGCM(block)
-	if aesgcmError != nil {
-		return gophkeeper.Piece{}, aesgcmError
-	}
-	var decryptedContent, openError = aesgcm.Open(nil, iv, content, nil)
-	if openError != nil {
-		return gophkeeper.Piece{}, openError
 	}
 
 	var piece = gophkeeper.Piece{
 		Meta:    meta,
-		Content: decryptedContent,
+		Content: content,
 	}
 	return piece, nil
 }
@@ -159,37 +105,13 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 		return -1, errors.Join(err, gophkeeper.ErrBadCredential)
 	}
 
-	var salt []byte = make([]byte, 8)
-	if _, err := rand.Read(salt); err != nil {
-		return -1, err
-	}
-
-	var block, blockError = aes.NewCipher(
-		pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New),
-	)
-	if blockError != nil {
-		return -1, blockError
-	}
-
-	var iv []byte = make([]byte, block.BlockSize())
-	if _, err := rand.Read(iv); err != nil {
-		return -1, err
-	}
-
 	var location = path.Join(i.BlobsDir, uuid.New().String())
 	var file, createError = os.Create(location)
 	if createError != nil {
 		return -1, createError
 	}
 
-	var (
-		writer = cipher.StreamWriter{
-			S: cipher.NewCTR(block, iv),
-			W: file,
-		}
-		reader = bufio.NewReader(blob.Content)
-	)
-	if _, err := reader.WriteTo(writer); err != nil {
+	if _, err := bufio.NewWriter(file).ReadFrom(blob.Content); err != nil {
 		log.Printf("failed to write file: %s\n", err.Error())
 		if err := file.Close(); err != nil {
 			log.Printf("failed to close file: %s\n", err.Error())
@@ -217,8 +139,8 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 
 	var insertBlobResult = transaction.QueryRow(
 		ctx,
-		`INSERT INTO blobs(location, iv, salt) VALUES($1, $2, $3) RETURNING id`,
-		location, iv, salt,
+		`INSERT INTO blobs(location) VALUES($1) RETURNING id`,
+		location,
 	)
 	if err := insertBlobResult.Scan(&blobID); err != nil {
 		return -1, err
@@ -246,29 +168,26 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 		return gophkeeper.Blob{}, errors.Join(err, gophkeeper.ErrBadCredential)
 	}
 
-	var (
-		iv       []byte
-		salt     []byte
-		location string
-		meta     string
-	)
-
 	var selectResourceResult = i.Connection.QueryRow(
 		ctx,
 		`SELECT meta, resource FROM resources WHERE id = $1 AND owner = $2`,
 		(int64)(rid), i.Username,
 	)
-	var blobID int
+	var (
+		meta   string
+		blobID int
+	)
 	if err := selectResourceResult.Scan(&meta, &blobID); err != nil {
 		return gophkeeper.Blob{}, err
 	}
 
+	var location string
 	var selectBlobResult = i.Connection.QueryRow(
 		ctx,
-		`SELECT location, iv, salt FROM blobs WHERE id = $1`,
+		`SELECT location FROM blobs WHERE id = $1`,
 		blobID,
 	)
-	if err := selectBlobResult.Scan(&location, &iv, &salt); err != nil {
+	if err := selectBlobResult.Scan(&location); err != nil {
 		return gophkeeper.Blob{}, err
 	}
 
@@ -277,22 +196,9 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 		return gophkeeper.Blob{}, fileError
 	}
 
-	var block, blockError = aes.NewCipher(
-		pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New),
-	)
-	if blockError != nil {
-		return gophkeeper.Blob{}, blockError
-	}
-
 	var blob = gophkeeper.Blob{
-		Meta: meta,
-		Content: &composedreadcloser.ComposedReadCloser{
-			Reader: cipher.StreamReader{
-				S: cipher.NewCTR(block, iv),
-				R: file,
-			},
-			Closer: file,
-		},
+		Meta:    meta,
+		Content: file,
 	}
 	return blob, nil
 }

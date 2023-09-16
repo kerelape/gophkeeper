@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"time"
 
+	"github.com/kerelape/gophkeeper/internal/server/encrypted"
 	"github.com/kerelape/gophkeeper/internal/server/postgres"
 	"github.com/kerelape/gophkeeper/internal/server/rest"
 	"github.com/pior/runnable"
@@ -30,7 +31,7 @@ var _ runnable.Runnable = (*Server)(nil)
 // Run runs Server.
 func (s *Server) Run(ctx context.Context) error {
 	var (
-		gophkeeper = postgres.Gophkeeper{
+		database = postgres.Gophkeeper{
 			PasswordEncoding: base64.RawStdEncoding,
 
 			Source:   (postgres.DSNSource)(s.DatabaseDSN),
@@ -43,15 +44,18 @@ func (s *Server) Run(ctx context.Context) error {
 			PasswordMinLength: s.PasswordMinLength,
 		}
 		restDaemon = rest.Rest{
-			Address:       s.RestAddress,
-			Gophkeeper:    &gophkeeper,
+			Address: s.RestAddress,
+			Gophkeeper: encrypted.Gophkeeper{
+				Origin: &database,
+				Cipher: encrypted.CFBCipher{},
+			},
 			UseTLS:        s.RestUseTLS,
 			HostWhilelist: s.RestHostWhilelist,
 		}
 	)
 
 	var manager = runnable.NewManager()
-	manager.Add(&gophkeeper)
+	manager.Add(&database)
 	manager.Add(&restDaemon)
 	return manager.Build().Run(ctx)
 }
