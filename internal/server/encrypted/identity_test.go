@@ -14,27 +14,27 @@ import (
 )
 
 func TestEncrypted(t *testing.T) {
-	var (
-		g = encrypted.Gophkeeper{
-			Origin: virtual.New(time.Hour, t.TempDir()),
-			Cipher: encrypted.CFBCipher{},
-		}
-		credential = gophkeeper.Credential{
-			Username: "test",
-			Password: "qwerty",
-		}
-	)
-
-	var registerError = g.Register(context.Background(), credential)
-	assert.Nil(t, registerError, "expected to successfully register")
-
-	var token, authenticateError = g.Authenticate(context.Background(), credential)
-	assert.Nil(t, authenticateError, "expected to successfully authenticate")
-
-	var identity, identityError = g.Identity(context.Background(), token)
-	assert.Nil(t, identityError, "expected to successfully get the identity")
-
 	t.Run("Piece", func(t *testing.T) {
+		var (
+			g = encrypted.Gophkeeper{
+				Origin: virtual.New(time.Hour, t.TempDir()),
+				Cipher: encrypted.CFBCipher{},
+			}
+			credential = gophkeeper.Credential{
+				Username: "test",
+				Password: "qwerty",
+			}
+		)
+
+		var registerError = g.Register(context.Background(), credential)
+		assert.Nil(t, registerError, "expected to successfully register")
+
+		var token, authenticateError = g.Authenticate(context.Background(), credential)
+		assert.Nil(t, authenticateError, "expected to successfully authenticate")
+
+		var identity, identityError = g.Identity(context.Background(), token)
+		assert.Nil(t, identityError, "expected to successfully get the identity")
+
 		var rid, storePieceError = identity.StorePiece(
 			context.Background(),
 			gophkeeper.Piece{
@@ -56,6 +56,26 @@ func TestEncrypted(t *testing.T) {
 	})
 
 	t.Run("Blob", func(t *testing.T) {
+		var (
+			g = encrypted.Gophkeeper{
+				Origin: virtual.New(time.Hour, t.TempDir()),
+				Cipher: encrypted.CFBCipher{},
+			}
+			credential = gophkeeper.Credential{
+				Username: "test",
+				Password: "qwerty",
+			}
+		)
+
+		var registerError = g.Register(context.Background(), credential)
+		assert.Nil(t, registerError, "expected to successfully register")
+
+		var token, authenticateError = g.Authenticate(context.Background(), credential)
+		assert.Nil(t, authenticateError, "expected to successfully authenticate")
+
+		var identity, identityError = g.Identity(context.Background(), token)
+		assert.Nil(t, identityError, "expected to successfully get the identity")
+
 		var rid, storeBlobError = identity.StoreBlob(
 			context.Background(),
 			gophkeeper.Blob{
@@ -82,6 +102,26 @@ func TestEncrypted(t *testing.T) {
 	})
 
 	t.Run("Delete", func(t *testing.T) {
+		var (
+			g = encrypted.Gophkeeper{
+				Origin: virtual.New(time.Hour, t.TempDir()),
+				Cipher: encrypted.CFBCipher{},
+			}
+			credential = gophkeeper.Credential{
+				Username: "test",
+				Password: "qwerty",
+			}
+		)
+
+		var registerError = g.Register(context.Background(), credential)
+		assert.Nil(t, registerError, "expected to successfully register")
+
+		var token, authenticateError = g.Authenticate(context.Background(), credential)
+		assert.Nil(t, authenticateError, "expected to successfully authenticate")
+
+		var identity, identityError = g.Identity(context.Background(), token)
+		assert.Nil(t, identityError, "expected to successfully get the identity")
+
 		var rid, storePieceError = identity.StorePiece(
 			context.Background(),
 			gophkeeper.Piece{
@@ -97,6 +137,26 @@ func TestEncrypted(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
+		var (
+			g = encrypted.Gophkeeper{
+				Origin: virtual.New(time.Hour, t.TempDir()),
+				Cipher: encrypted.CFBCipher{},
+			}
+			credential = gophkeeper.Credential{
+				Username: "test",
+				Password: "qwerty",
+			}
+		)
+
+		var registerError = g.Register(context.Background(), credential)
+		assert.Nil(t, registerError, "expected to successfully register")
+
+		var token, authenticateError = g.Authenticate(context.Background(), credential)
+		assert.Nil(t, authenticateError, "expected to successfully authenticate")
+
+		var identity, identityError = g.Identity(context.Background(), token)
+		assert.Nil(t, identityError, "expected to successfully get the identity")
+
 		var _, storePieceError = identity.StorePiece(
 			context.Background(),
 			gophkeeper.Piece{

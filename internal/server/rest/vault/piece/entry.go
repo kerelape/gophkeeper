@@ -32,6 +32,7 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 	if identityError != nil {
 		var status = http.StatusInternalServerError
 		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
+			println("identity")
 			status = http.StatusUnauthorized
 		}
 		http.Error(out, http.StatusText(status), status)
@@ -60,6 +61,7 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 	}
 	var password = in.Header.Get("X-Password")
 	if password == "" {
+		println("password")
 		var status = http.StatusUnauthorized
 		http.Error(out, http.StatusText(status), status)
 		return
