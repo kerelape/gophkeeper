@@ -116,4 +116,23 @@ func TestIdentity(t *testing.T) {
 	var resources, listError = identity.List(context.Background())
 	assert.Nil(t, listError, "did not expect an error")
 	assert.Equal(t, 1, len(resources), "expected resources list to be equal to 2")
+
+	t.Run("Invalid RID", func(t *testing.T) {
+		const RID = -1
+		t.Run("Restore piece", func(t *testing.T) {
+			var _, err = identity.RestorePiece(context.Background(), RID, credential.Password)
+			assert.NotNil(t, err, "expected to get an error")
+			assert.ErrorIs(t, err, gophkeeper.ErrResourceNotFound, "unexpected error")
+		})
+		t.Run("Restore blob", func(t *testing.T) {
+			var _, err = identity.RestoreBlob(context.Background(), RID, credential.Password)
+			assert.NotNil(t, err, "expected to get an error")
+			assert.ErrorIs(t, err, gophkeeper.ErrResourceNotFound, "unexpected error")
+		})
+		t.Run("Delete", func(t *testing.T) {
+			var err = identity.Delete(context.Background(), RID)
+			assert.NotNil(t, err, "expected to get an error")
+			assert.ErrorIs(t, err, gophkeeper.ErrResourceNotFound, "unexpected error")
+		})
+	})
 }

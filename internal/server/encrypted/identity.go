@@ -45,14 +45,8 @@ var _ gophkeeper.Identity = (*Identity)(nil)
 
 // StorePiece implements gophkeeper.Identity.
 func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, password string) (gophkeeper.ResourceID, error) {
-	var (
-		salt []byte = make([]byte, 8)
-		iv   []byte = make([]byte, 12)
-	)
+	var salt []byte = make([]byte, 8)
 	if _, err := rand.Read(salt); err != nil {
-		return -1, err
-	}
-	if _, err := rand.Read(iv); err != nil {
 		return -1, err
 	}
 
@@ -61,6 +55,11 @@ func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passwo
 	)
 	if blockError != nil {
 		return -1, blockError
+	}
+
+	var iv []byte = make([]byte, block.BlockSize())
+	if _, err := rand.Read(iv); err != nil {
+		return -1, err
 	}
 
 	var reader = cipher.StreamReader{
@@ -181,7 +180,7 @@ func (i Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, pa
 	}
 
 	var block, blockError = aes.NewCipher(
-		pbkdf2.Key(([]byte)(password), meta.Salt, 0, 0, sha256.New),
+		pbkdf2.Key(([]byte)(password), meta.Salt, keyIter, keyLen, sha256.New),
 	)
 	if blockError != nil {
 		return gophkeeper.Blob{}, blockError

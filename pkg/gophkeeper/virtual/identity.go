@@ -55,7 +55,7 @@ func (i *Identity) RestorePiece(_ context.Context, rid gophkeeper.ResourceID, pa
 		return gophkeeper.Piece{}, gophkeeper.ErrBadCredential
 	}
 
-	if !((int)(rid) < len(i.storage.resources)) {
+	if !((int)(rid) < len(i.storage.resources)) || rid < 0 {
 		return gophkeeper.Piece{}, gophkeeper.ErrResourceNotFound
 	}
 
@@ -124,7 +124,7 @@ func (i *Identity) RestoreBlob(_ context.Context, rid gophkeeper.ResourceID, pas
 		return gophkeeper.Blob{}, gophkeeper.ErrBadCredential
 	}
 
-	if !((int)(rid) < len(i.storage.resources)) {
+	if !((int)(rid) < len(i.storage.resources)) || rid < 0 {
 		return gophkeeper.Blob{}, gophkeeper.ErrResourceNotFound
 	}
 
@@ -150,7 +150,7 @@ func (i *Identity) Delete(_ context.Context, rid gophkeeper.ResourceID) error {
 	i.storage.mutex.Lock()
 	defer i.storage.mutex.Unlock()
 
-	if !((int)(rid) < len(i.storage.resources)) {
+	if !((int)(rid) < len(i.storage.resources)) || rid < 0 {
 		return gophkeeper.ErrResourceNotFound
 	}
 

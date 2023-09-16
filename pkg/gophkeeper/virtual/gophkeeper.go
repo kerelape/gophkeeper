@@ -32,8 +32,8 @@ type Gophkeeper struct {
 
 // New returns a new virtual Gophkeeper that store all its
 // data in RAM.
-func New(sessionLifespan time.Duration, blobsDir string) Gophkeeper {
-	return Gophkeeper{
+func New(sessionLifespan time.Duration, blobsDir string) *Gophkeeper {
+	return &Gophkeeper{
 		identities:      make([]identity, 0),
 		sessions:        make(map[gophkeeper.Token]int),
 		sessionLifespan: sessionLifespan,
