@@ -142,6 +142,33 @@ func TestEntry(t *testing.T) {
 		t.Run("blob", func(t *testing.T) {
 			var rid int
 			t.Run("Store", func(t *testing.T) {
+				t.Run("Without token", func(t *testing.T) {
+					var (
+						recorder = httptest.NewRecorder()
+						request  = httptest.NewRequest(
+							http.MethodPut,
+							"/vault/blob",
+							strings.NewReader("Hello, World!"),
+						)
+					)
+					handler.ServeHTTP(recorder, request)
+					var response = recorder.Result()
+					assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
+				})
+				t.Run("Without password", func(t *testing.T) {
+					var (
+						recorder = httptest.NewRecorder()
+						request  = httptest.NewRequest(
+							http.MethodPut,
+							"/vault/blob",
+							strings.NewReader("Hello, World!"),
+						)
+					)
+					request.Header.Set("X-Password", "qwerty")
+					handler.ServeHTTP(recorder, request)
+					var response = recorder.Result()
+					assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
+				})
 				var (
 					recorder = httptest.NewRecorder()
 					request  = httptest.NewRequest(
@@ -164,6 +191,44 @@ func TestEntry(t *testing.T) {
 				rid = responseBody.RID
 			})
 			t.Run("Restore", func(t *testing.T) {
+				t.Run("Without token", func(t *testing.T) {
+					var (
+						recorder = httptest.NewRecorder()
+						request  = httptest.NewRequest(
+							http.MethodGet,
+							fmt.Sprintf("/vault/blob/%d", rid),
+							nil,
+						)
+					)
+					handler.ServeHTTP(recorder, request)
+					var response = recorder.Result()
+					assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
+				})
+				t.Run("Without password", func(t *testing.T) {
+					var (
+						recorder = httptest.NewRecorder()
+						request  = httptest.NewRequest(
+							http.MethodGet,
+							fmt.Sprintf("/vault/blob/%d", rid),
+							nil,
+						)
+					)
+					request.Header.Set("Authorization", token)
+					handler.ServeHTTP(recorder, request)
+					var response = recorder.Result()
+					assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
+				})
+				t.Run("Invalid RID", func(t *testing.T) {
+					var (
+						recorder = httptest.NewRecorder()
+						request  = httptest.NewRequest(http.MethodGet, "/vault/blob/_", nil)
+					)
+					request.Header.Set("Authorization", token)
+					request.Header.Set("X-Password", "qwerty")
+					handler.ServeHTTP(recorder, request)
+					var response = recorder.Result()
+					assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
+				})
 				var (
 					recorder = httptest.NewRecorder()
 					request  = httptest.NewRequest(
