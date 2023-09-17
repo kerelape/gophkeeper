@@ -2,6 +2,7 @@ package rest_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -46,6 +47,7 @@ func GophkeeperExample() {
 
 	// Restore the piece back using its RID.
 	piece, _ = identity.RestorePiece(context.Background(), rid, credential.Password)
+	fmt.Println(piece.Meta) // -> This meta information won't get encypted by Gophkeeper
 }
 
 func TestGophkeeper(t *testing.T) {
