@@ -46,6 +46,45 @@ func TestEntry(t *testing.T) {
 			var response = register()
 			assert.Equal(t, http.StatusConflict, response.StatusCode)
 		})
+		t.Run("Non-JSON body", func(t *testing.T) {
+			var (
+				recorder = httptest.NewRecorder()
+				request  = httptest.NewRequest(
+					http.MethodPost,
+					"/register",
+					strings.NewReader(`_`),
+				)
+			)
+			handler.ServeHTTP(recorder, request)
+			var response = recorder.Result()
+			assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
+		})
+		t.Run("Without password", func(t *testing.T) {
+			var (
+				recorder = httptest.NewRecorder()
+				request  = httptest.NewRequest(
+					http.MethodPost,
+					"/register",
+					strings.NewReader(`{"username":"test"}`),
+				)
+			)
+			handler.ServeHTTP(recorder, request)
+			var response = recorder.Result()
+			assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
+		})
+		t.Run("Without username", func(t *testing.T) {
+			var (
+				recorder = httptest.NewRecorder()
+				request  = httptest.NewRequest(
+					http.MethodPost,
+					"/register",
+					strings.NewReader(`{"password":"qwerty"}`),
+				)
+			)
+			handler.ServeHTTP(recorder, request)
+			var response = recorder.Result()
+			assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
+		})
 	})
 	t.Run("login", func(t *testing.T) {
 		t.Run("Existing identity", func(t *testing.T) {
