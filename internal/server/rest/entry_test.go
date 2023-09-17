@@ -330,5 +330,55 @@ func TestEntry(t *testing.T) {
 				assert.Equal(t, "Hello, World!", (string)(content), "content is not correct")
 			})
 		})
+
+		t.Run("List", func(t *testing.T) {
+			var (
+				recorder = httptest.NewRecorder()
+				request  = httptest.NewRequest(http.MethodGet, "/vault", nil)
+			)
+			request.Header.Set("Authorization", token)
+			handler.ServeHTTP(recorder, request)
+			var response = recorder.Result()
+			assert.Equal(t, http.StatusOK, response.StatusCode, "unexpected status code")
+			t.Run("Without token", func(t *testing.T) {
+				var (
+					recorder = httptest.NewRecorder()
+					request  = httptest.NewRequest(http.MethodGet, "/vault", nil)
+				)
+				handler.ServeHTTP(recorder, request)
+				var response = recorder.Result()
+				assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
+			})
+		})
+
+		t.Run("Delete", func(t *testing.T) {
+			var (
+				recorder = httptest.NewRecorder()
+				request  = httptest.NewRequest(http.MethodDelete, "/vault/0", nil)
+			)
+			request.Header.Set("Authorization", token)
+			handler.ServeHTTP(recorder, request)
+			var response = recorder.Result()
+			assert.Equal(t, http.StatusOK, response.StatusCode, "unexpected status code")
+			t.Run("Without token", func(t *testing.T) {
+				var (
+					recorder = httptest.NewRecorder()
+					request  = httptest.NewRequest(http.MethodDelete, "/vault/0", nil)
+				)
+				handler.ServeHTTP(recorder, request)
+				var response = recorder.Result()
+				assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
+			})
+			t.Run("Invalid RID", func(t *testing.T) {
+				var (
+					recorder = httptest.NewRecorder()
+					request  = httptest.NewRequest(http.MethodDelete, "/vault/_", nil)
+				)
+				request.Header.Set("Authorization", token)
+				handler.ServeHTTP(recorder, request)
+				var response = recorder.Result()
+				assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
+			})
+		})
 	})
 }
