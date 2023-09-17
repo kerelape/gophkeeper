@@ -32,7 +32,6 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 	if identityError != nil {
 		var status = http.StatusInternalServerError
 		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
-			println("identity")
 			status = http.StatusUnauthorized
 		}
 		http.Error(out, http.StatusText(status), status)
@@ -61,7 +60,6 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 	}
 	var password = in.Header.Get("X-Password")
 	if password == "" {
-		println("password")
 		var status = http.StatusUnauthorized
 		http.Error(out, http.StatusText(status), status)
 		return
@@ -69,7 +67,7 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 	var rid, storeError = identity.StorePiece(in.Context(), piece, password)
 	if storeError != nil {
 		var status = http.StatusInternalServerError
-		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
+		if errors.Is(storeError, gophkeeper.ErrBadCredential) {
 			status = http.StatusUnauthorized
 		}
 		http.Error(out, http.StatusText(status), status)
@@ -114,8 +112,11 @@ func (e *Entry) decrypt(out http.ResponseWriter, in *http.Request) {
 	var piece, restoreError = identity.RestorePiece(in.Context(), (gophkeeper.ResourceID)(rid), password)
 	if restoreError != nil {
 		var status = http.StatusInternalServerError
-		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
+		if errors.Is(restoreError, gophkeeper.ErrBadCredential) {
 			status = http.StatusUnauthorized
+		}
+		if errors.Is(restoreError, gophkeeper.ErrResourceNotFound) {
+			status = http.StatusNotFound
 		}
 		http.Error(out, http.StatusText(status), status)
 		return

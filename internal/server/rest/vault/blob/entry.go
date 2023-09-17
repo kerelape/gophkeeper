@@ -97,8 +97,11 @@ func (e *Entry) decrypt(out http.ResponseWriter, in *http.Request) {
 	var blob, restoreError = identity.RestoreBlob(in.Context(), (gophkeeper.ResourceID)(rid), password)
 	if restoreError != nil {
 		var status = http.StatusInternalServerError
-		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
+		if errors.Is(restoreError, gophkeeper.ErrBadCredential) {
 			status = http.StatusUnauthorized
+		}
+		if errors.Is(restoreError, gophkeeper.ErrResourceNotFound) {
+			status = http.StatusNotFound
 		}
 		http.Error(out, http.StatusText(status), status)
 		return

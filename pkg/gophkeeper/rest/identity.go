@@ -131,6 +131,8 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 		return gophkeeper.Piece{}, gophkeeper.ErrBadCredential
 	case http.StatusInternalServerError:
 		return gophkeeper.Piece{}, ErrServerIsDown
+	case http.StatusNotFound:
+		return gophkeeper.Piece{}, gophkeeper.ErrResourceNotFound
 	default:
 		return gophkeeper.Piece{}, errors.Join(
 			fmt.Errorf("unexpected response status: %d", response.StatusCode),
@@ -209,6 +211,8 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 		return gophkeeper.Blob{}, gophkeeper.ErrBadCredential
 	case http.StatusInternalServerError:
 		return gophkeeper.Blob{}, ErrServerIsDown
+	case http.StatusNotFound:
+		return gophkeeper.Blob{}, gophkeeper.ErrResourceNotFound
 	default:
 		return gophkeeper.Blob{}, errors.Join(
 			fmt.Errorf("unexpected response status: %d", response.StatusCode),
