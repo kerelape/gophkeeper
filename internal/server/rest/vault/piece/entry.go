@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kerelape/gophkeeper/internal/server/rest/authentication"
+	"github.com/kerelape/gophkeeper/internal/server/rest/vault/credential"
 	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
 )
 
@@ -20,6 +21,7 @@ type Entry struct{}
 // Route routes piece entry.
 func (e *Entry) Route() http.Handler {
 	var router = chi.NewRouter()
+	router.Use(credential.Middleware)
 	router.Put("/", e.encrypt)
 	router.Get("/{rid}", e.decrypt)
 	return router
@@ -27,6 +29,7 @@ func (e *Entry) Route() http.Handler {
 
 func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 	identity := authentication.Identity(in)
+	password := credential.Password(in)
 
 	var request struct {
 		Meta    string `json:"meta"`
@@ -48,12 +51,7 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 		Meta:    request.Meta,
 		Content: content,
 	}
-	var password = in.Header.Get("X-Password")
-	if password == "" {
-		var status = http.StatusUnauthorized
-		http.Error(out, http.StatusText(status), status)
-		return
-	}
+
 	var rid, storeError = identity.StorePiece(in.Context(), piece, password)
 	if storeError != nil {
 		var status = http.StatusInternalServerError
@@ -76,13 +74,8 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 
 func (e *Entry) decrypt(out http.ResponseWriter, in *http.Request) {
 	identity := authentication.Identity(in)
+	password := credential.Password(in)
 
-	var password = in.Header.Get("X-Password")
-	if password == "" {
-		var status = http.StatusUnauthorized
-		http.Error(out, http.StatusText(status), status)
-		return
-	}
 	var rid, ridError = strconv.Atoi(chi.URLParam(in, "rid"))
 	if ridError != nil {
 		var status = http.StatusBadRequest
