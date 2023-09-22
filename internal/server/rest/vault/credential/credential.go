@@ -14,7 +14,7 @@ func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(out http.ResponseWriter, in *http.Request) {
 		password := in.Header.Get("X-Password")
 		if password == "" {
-			status := http.StatusUnauthorized
+			status := http.StatusBadRequest
 			http.Error(out, http.StatusText(status), status)
 			return
 		}
