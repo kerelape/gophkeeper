@@ -18,10 +18,14 @@ func vaultPassword(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if m.(vaultPasswordModel).cancelled {
+	model, ok := m.(vaultPasswordModel)
+	if !ok {
+		panic("unexpected model type")
+	}
+	if model.cancelled {
 		return "", errors.New("vault password typing cancelled by user")
 	}
-	return m.(vaultPasswordModel).password.Value(), nil
+	return model.password.Value(), nil
 }
 
 type vaultPasswordModel struct {

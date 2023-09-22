@@ -29,12 +29,15 @@ func cardCredential(ctx context.Context) (cardInfo, error) {
 	if err != nil {
 		return cardInfo{}, err
 	}
-	var cm = m.(cardCredentialModel)
+	model, ok := m.(cardCredentialModel)
+	if !ok {
+		panic("unexpected model type")
+	}
 	var info = cardInfo{
-		ccn:    cm.ccn.Value(),
-		exp:    cm.exp.Value(),
-		cvv:    cm.cvv.Value(),
-		holder: cm.holder.Value(),
+		ccn:    model.ccn.Value(),
+		exp:    model.exp.Value(),
+		cvv:    model.cvv.Value(),
+		holder: model.holder.Value(),
 	}
 	return info, nil
 }

@@ -45,10 +45,14 @@ func text(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if m.(textModel).cancelled {
+	model, ok := m.(textModel)
+	if !ok {
+		panic("unexpected model type")
+	}
+	if model.cancelled {
 		return "", errors.New("user cancelled typing")
 	}
-	return m.(textModel).content.Value(), nil
+	return model.content.Value(), nil
 }
 
 var _ tea.Model = (*textModel)(nil)

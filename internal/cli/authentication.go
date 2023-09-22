@@ -20,12 +20,16 @@ func authenticate(ctx context.Context, g gophkeeper.Gophkeeper) (gophkeeper.Iden
 	if err != nil {
 		return nil, err
 	}
-	if m.(authenticationModel).cancelled {
+	model, ok := m.(authenticationModel)
+	if !ok {
+		panic("unexpected model type")
+	}
+	if model.cancelled {
 		return nil, errors.New("authentiation cancelled by user")
 	}
 	var credential = gophkeeper.Credential{
-		Username: m.(authenticationModel).username.Value(),
-		Password: m.(authenticationModel).password.Value(),
+		Username: model.username.Value(),
+		Password: model.password.Value(),
 	}
 	var token, tokenError = g.Authenticate(ctx, credential)
 	if tokenError != nil {

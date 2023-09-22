@@ -39,10 +39,14 @@ func description(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if m.(descriptionModel).cancelled {
+	model, ok := m.(descriptionModel)
+	if !ok {
+		panic("unexpected model type")
+	}
+	if model.cancelled {
 		return "", errors.New("user cancelled typing description")
 	}
-	return m.(descriptionModel).description.Value(), nil
+	return model.description.Value(), nil
 }
 
 var _ tea.Model = (*descriptionModel)(nil)

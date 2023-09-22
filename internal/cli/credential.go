@@ -46,11 +46,14 @@ func credential(ctx context.Context) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	if m.(credentialModel).cancelled {
+	model, ok := m.(credentialModel)
+	if !ok {
+		panic("unexpected model type")
+	}
+	if model.cancelled {
 		return "", "", errors.New("credential form cancelled by user")
 	}
-	var credential = m.(credentialModel)
-	return credential.username.Value(), credential.password.Value(), nil
+	return model.username.Value(), model.password.Value(), nil
 }
 
 var _ tea.Model = (*credentialModel)(nil)
