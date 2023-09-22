@@ -10,13 +10,12 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kerelape/gophkeeper/internal/server/rest/authentication"
 	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
 )
 
 // Entry is piece entry.
-type Entry struct {
-	Gophkeeper gophkeeper.Gophkeeper
-}
+type Entry struct{}
 
 // Route routes piece entry.
 func (e *Entry) Route() http.Handler {
@@ -27,16 +26,7 @@ func (e *Entry) Route() http.Handler {
 }
 
 func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
-	var token = in.Header.Get("Authorization")
-	var identity, identityError = e.Gophkeeper.Identity(in.Context(), (gophkeeper.Token)(token))
-	if identityError != nil {
-		var status = http.StatusInternalServerError
-		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
-			status = http.StatusUnauthorized
-		}
-		http.Error(out, http.StatusText(status), status)
-		return
-	}
+	identity := authentication.Identity(in)
 
 	var request struct {
 		Meta    string `json:"meta"`
@@ -85,16 +75,7 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 }
 
 func (e *Entry) decrypt(out http.ResponseWriter, in *http.Request) {
-	var token = in.Header.Get("Authorization")
-	var identity, identityError = e.Gophkeeper.Identity(in.Context(), (gophkeeper.Token)(token))
-	if identityError != nil {
-		var status = http.StatusInternalServerError
-		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
-			status = http.StatusUnauthorized
-		}
-		http.Error(out, http.StatusText(status), status)
-		return
-	}
+	identity := authentication.Identity(in)
 
 	var password = in.Header.Get("X-Password")
 	if password == "" {

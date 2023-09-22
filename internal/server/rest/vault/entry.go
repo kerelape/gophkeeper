@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kerelape/gophkeeper/internal/server/rest/authentication"
 	"github.com/kerelape/gophkeeper/internal/server/rest/vault/blob"
 	"github.com/kerelape/gophkeeper/internal/server/rest/vault/piece"
 	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
@@ -21,14 +22,11 @@ type Entry struct {
 // Route routes vault entry.
 func (e *Entry) Route() http.Handler {
 	var (
-		piece = piece.Entry{
-			Gophkeeper: e.Gophkeeper,
-		}
-		blob = blob.Entry{
-			Gophkeeper: e.Gophkeeper,
-		}
+		piece = piece.Entry{}
+		blob  = blob.Entry{}
 	)
 	var router = chi.NewRouter()
+	router.Use(authentication.Middleware(e.Gophkeeper))
 	router.Mount("/piece", piece.Route())
 	router.Mount("/blob", blob.Route())
 	router.Get("/", e.get)
@@ -37,16 +35,7 @@ func (e *Entry) Route() http.Handler {
 }
 
 func (e *Entry) get(out http.ResponseWriter, in *http.Request) {
-	var token = in.Header.Get("Authorization")
-	var identity, identityError = e.Gophkeeper.Identity(in.Context(), (gophkeeper.Token)(token))
-	if identityError != nil {
-		var status = http.StatusInternalServerError
-		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
-			status = http.StatusUnauthorized
-		}
-		http.Error(out, http.StatusText(status), status)
-		return
-	}
+	var identity = authentication.Identity(in)
 
 	var resources, resourcesError = identity.List(in.Context())
 	if resourcesError != nil {
