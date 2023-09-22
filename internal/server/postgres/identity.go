@@ -37,11 +37,13 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 	if transactionError != nil {
 		return -1, transactionError
 	}
-	defer transaction.Rollback(context.Background())
 
 	insertPieceResult := transaction.QueryRow(ctx, `INSERT INTO pieces(content) VALUES($1) RETURNING id`, piece.Content)
 	var id int
 	if err := insertPieceResult.Scan(&id); err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return -1, err
+		}
 		return -1, err
 	}
 	insertResourceResult := transaction.QueryRow(
@@ -51,9 +53,15 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 	)
 	var rid int64
 	if err := insertResourceResult.Scan(&rid); err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return -1, err
+		}
 		return -1, err
 	}
 	if err := transaction.Commit(ctx); err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return -1, err
+		}
 		return -1, err
 	}
 
@@ -130,7 +138,6 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 	if transactionError != nil {
 		return -1, transactionError
 	}
-	defer transaction.Rollback(context.Background())
 
 	var (
 		blobID int
@@ -143,6 +150,9 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 		location,
 	)
 	if err := insertBlobResult.Scan(&blobID); err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return -1, err
+		}
 		return -1, err
 	}
 
@@ -152,10 +162,16 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 		blob.Meta, i.Username, gophkeeper.ResourceTypeBlob, blobID,
 	)
 	if err := insertResourceResult.Scan(&rid); err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return -1, err
+		}
 		return -1, err
 	}
 
 	if err := transaction.Commit(ctx); err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return -1, err
+		}
 		return -1, err
 	}
 
@@ -209,7 +225,6 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 	if transactionError != nil {
 		return transactionError
 	}
-	defer transaction.Rollback(context.Background())
 
 	var deleteResourceResult = transaction.QueryRow(
 		ctx,
@@ -222,6 +237,9 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 	)
 	if err := deleteResourceResult.Scan(&resourceType, &resourceID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			if err := transaction.Rollback(ctx); err != nil {
+				return err
+			}
 			return gophkeeper.ErrResourceNotFound
 		}
 		return err
@@ -235,6 +253,9 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 			resourceID,
 		)
 		if err != nil {
+			if err := transaction.Rollback(ctx); err != nil {
+				return err
+			}
 			return err
 		}
 	case gophkeeper.ResourceTypeBlob:
@@ -245,9 +266,15 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 		)
 		var location string
 		if err := deleteResult.Scan(&location); err != nil {
+			if err := transaction.Rollback(ctx); err != nil {
+				return err
+			}
 			return err
 		}
 		if err := os.Remove(location); err != nil {
+			if err := transaction.Rollback(ctx); err != nil {
+				return err
+			}
 			return err
 		}
 	default:
@@ -255,6 +282,9 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 	}
 
 	if err := transaction.Commit(ctx); err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return err
+		}
 		return err
 	}
 	return nil
