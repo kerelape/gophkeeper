@@ -72,17 +72,17 @@ func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passwo
 	}
 	piece.Content = content
 
-	var meta, metaError = json.Marshal(
+	var wrappedMeta, wrappedMetaError = json.Marshal(
 		meta{
 			IV:      iv,
 			Salt:    salt,
 			Content: piece.Meta,
 		},
 	)
-	if metaError != nil {
-		return -1, metaError
+	if wrappedMetaError != nil {
+		return -1, wrappedMetaError
 	}
-	piece.Meta = (string)(meta)
+	piece.Meta = (string)(wrappedMeta)
 
 	return i.Origin.StorePiece(ctx, piece, password)
 }
