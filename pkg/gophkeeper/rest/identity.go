@@ -30,7 +30,7 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 	var content, contentError = json.Marshal(
 		map[string]any{
 			"meta":    piece.Meta,
-			"content": base64.RawStdEncoding.EncodeToString(([]byte)(piece.Content)),
+			"content": base64.RawStdEncoding.EncodeToString(piece.Content),
 		},
 	)
 	if contentError != nil {
