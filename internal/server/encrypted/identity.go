@@ -57,7 +57,7 @@ func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passwo
 		return -1, blockError
 	}
 
-	var iv []byte = make([]byte, block.BlockSize())
+	iv := make([]byte, block.BlockSize())
 	if _, err := rand.Read(iv); err != nil {
 		return -1, err
 	}
