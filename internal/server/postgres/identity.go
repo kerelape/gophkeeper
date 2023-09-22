@@ -251,7 +251,7 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 			return err
 		}
 	default:
-		log.Fatalf("unknown resource type: %d", resourceType)
+		return errors.New("unknown resource type")
 	}
 
 	if err := transaction.Commit(ctx); err != nil {
@@ -268,19 +268,16 @@ func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 		i.Username,
 	)
 	if selectResourcesResultError != nil {
-		log.Fatal(selectResourcesResultError)
 		return nil, selectResourcesResultError
 	}
 	defer selectResourcesResult.Close()
 	var resources []gophkeeper.Resource
 	for selectResourcesResult.Next() {
 		if err := selectResourcesResult.Err(); err != nil {
-			log.Fatal(err)
 			return nil, err
 		}
 		var resource gophkeeper.Resource
 		if err := selectResourcesResult.Scan(&resource.ID, &resource.Type, &resource.Meta); err != nil {
-			log.Fatal(err)
 			return nil, err
 		}
 		resources = append(resources, resource)
