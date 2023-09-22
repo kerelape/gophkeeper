@@ -22,7 +22,10 @@ func (e *Entry) Route() http.Handler {
 }
 
 func (e *Entry) post(out http.ResponseWriter, in *http.Request) {
-	var requestBody map[string]any
+	var requestBody struct {
+		Username *string `json:"username"`
+		Password *string `json:"password"`
+	}
 	if err := json.NewDecoder(in.Body).Decode(&requestBody); err != nil {
 		var status = http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
@@ -30,16 +33,16 @@ func (e *Entry) post(out http.ResponseWriter, in *http.Request) {
 	}
 
 	var credential gophkeeper.Credential
-	if val, ok := requestBody["username"].(string); ok {
-		credential.Username = val
+	if username := requestBody.Username; username != nil {
+		credential.Username = *username
 	} else {
 		var status = http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
 
-	if val, ok := requestBody["password"].(string); ok {
-		credential.Password = val
+	if password := requestBody.Password; password != nil {
+		credential.Password = *password
 	} else {
 		var status = http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
