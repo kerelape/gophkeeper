@@ -15,8 +15,7 @@ func main() {
 	log.SetPrefix("[GOPHKEEPER] ")
 	var configuration config.Config
 	if err := config.Read(&configuration); err != nil {
-		log.Println(configuration.Description())
-		os.Exit(1)
+		log.Fatal(configuration.Description())
 	}
 	var secret, decodeSecretError = base64.RawStdEncoding.DecodeString(configuration.Token.Secret)
 	if decodeSecretError != nil {
