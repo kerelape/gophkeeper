@@ -28,6 +28,8 @@ Environment variables:
 exit status 1
 ```
 
+For a `localhost` set `REST_USE_TLS` to "false"
+
 ## CLI
 
 ```bash
