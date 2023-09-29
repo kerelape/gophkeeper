@@ -5,6 +5,8 @@ import (
 	_ "embed"
 	"encoding/base64"
 	"errors"
+	"io/fs"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -152,6 +154,11 @@ func (r *Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (goph
 
 // Run implements Runnable.
 func (r *Gophkeeper) Run(ctx context.Context) error {
+	mkdirError := os.MkdirAll(r.BlobsDir, fs.ModePerm)
+	if mkdirError != nil {
+		return mkdirError
+	}
+
 	var connection, connectError = r.Source.Connect(ctx)
 	if connectError != nil {
 		return connectError
