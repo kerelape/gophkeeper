@@ -1,3 +1,6 @@
+// Package composedreadcloser provides ComposedReadCloser,
+// which can be use to compbine an io.Reader and an io.Closer
+// together in a single object.
 package composedreadcloser
 
 import "io"

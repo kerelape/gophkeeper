@@ -1,3 +1,5 @@
+// Package blob provides REST endpoints to store and
+// restore a file.
 package blob
 
 import (

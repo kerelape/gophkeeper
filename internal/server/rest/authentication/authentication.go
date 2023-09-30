@@ -1,3 +1,5 @@
+// Package authentication provides authentication related
+// middleware and functions.
 package authentication
 
 import (

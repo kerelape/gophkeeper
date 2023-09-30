@@ -1,3 +1,5 @@
+// Package piece provides REST endpoints to store and
+// restore a piece.
 package piece
 
 import (

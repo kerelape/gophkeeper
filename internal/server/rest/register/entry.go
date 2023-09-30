@@ -1,3 +1,5 @@
+// Package register provides REST endpoint to register
+// a new user.
 package register
 
 import (
@@ -17,11 +19,11 @@ type Entry struct {
 // Route routes login entry.
 func (e *Entry) Route() http.Handler {
 	var router = chi.NewRouter()
-	router.Post("/", e.post)
+	router.Post("/", e.register)
 	return router
 }
 
-func (e *Entry) post(out http.ResponseWriter, in *http.Request) {
+func (e *Entry) register(out http.ResponseWriter, in *http.Request) {
 	var requestBody struct {
 		Username *string `json:"username"`
 		Password *string `json:"password"`

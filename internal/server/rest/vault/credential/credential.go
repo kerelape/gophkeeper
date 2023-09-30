@@ -1,3 +1,5 @@
+// Package credential provides authorization related
+// middleware and function.
 package credential
 
 import (

@@ -1,3 +1,4 @@
+// Package login provides REST endpoint to authenticate a user.
 package login
 
 import (
@@ -17,11 +18,11 @@ type Entry struct {
 // Route routes this entry into an http.Handler.
 func (e *Entry) Route() http.Handler {
 	var router = chi.NewRouter()
-	router.Post("/", e.post)
+	router.Post("/", e.login)
 	return router
 }
 
-func (e *Entry) post(out http.ResponseWriter, in *http.Request) {
+func (e *Entry) login(out http.ResponseWriter, in *http.Request) {
 	var requestBody struct {
 		Username *string `json:"username"`
 		Password *string `json:"password"`

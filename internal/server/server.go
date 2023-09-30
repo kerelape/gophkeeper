@@ -1,3 +1,4 @@
+// Package server provides Server object.
 package server
 
 import (

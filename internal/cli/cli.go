@@ -1,3 +1,5 @@
+// Package cli provides command line interface to
+// a gophkeeper via CLI.
 package cli
 
 import (

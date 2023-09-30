@@ -1,3 +1,5 @@
+// Package vault provides REST entry for manipulating
+// the vault of the authenticated user.
 package vault
 
 import (

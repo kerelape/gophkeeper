@@ -1,3 +1,4 @@
+// Package stack provides Stack (LIFO structure) implementation.
 package stack
 
 // Stack is a convenience wrapper for slice.

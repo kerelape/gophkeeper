@@ -1,3 +1,5 @@
+// Package deferred provides Deferred object, that
+// can store a single deferred value.
 package deferred
 
 import (
