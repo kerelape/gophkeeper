@@ -3,6 +3,7 @@ package rest_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,7 +29,10 @@ func GophkeeperExample() {
 	}
 
 	// Register the new user.
-	g.Register(context.Background(), credential)
+	err := g.Register(context.Background(), credential)
+	if err != nil {
+		log.Fatal("We failed to register!")
+	}
 
 	// Authenticate the user with the same credentials.
 	var token, _ = g.Authenticate(context.Background(), credential)
