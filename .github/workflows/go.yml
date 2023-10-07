@@ -44,3 +44,21 @@ jobs:
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+
+    - name: Build server
+      run: go build -o gophkeeper.server.out ./cmd/server/
+
+    - name: Archive server artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: gophkeeper-server
+        path: gophkeeper.server.out
+
+    - name: Build CLI
+      run: go build -o gophkeeper.cli.out ./cmd/cli/
+
+    - name: Archive CLI artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: gophkeeper-cli
+        path: gophkeeper.cli.out
