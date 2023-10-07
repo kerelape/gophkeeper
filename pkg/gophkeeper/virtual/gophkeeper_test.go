@@ -98,7 +98,7 @@ func TestGophkeeper(t *testing.T) {
 		var token, authenticateError = g.Authenticate(context.Background(), credential)
 		assert.Nil(t, authenticateError, "expected to successfully authentiate")
 
-		time.Sleep(timeout)
+		time.Sleep(timeout + time.Second)
 
 		var _, identityError = g.Identity(context.Background(), token)
 		assert.NotNil(t, identityError, "expected to get an error with an outdated token")
