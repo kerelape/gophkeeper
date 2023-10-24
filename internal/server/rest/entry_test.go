@@ -212,7 +212,7 @@ func TestEntry(t *testing.T) {
 				assert.Nil(t, decodeError, "did not expect an error")
 
 				content, contentError := base64.RawStdEncoding.DecodeString(responseBody.Content)
-				assert.Nil(t, contentError, "did not expect and error")
+				assert.Nil(t, contentError, "did not expect an error")
 
 				assert.Equal(t, "testmeta", responseBody.Meta, "meta is not correct")
 				assert.Equal(t, "Hello, World!", (string)(content), "content is not correct")

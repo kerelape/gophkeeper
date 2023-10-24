@@ -39,13 +39,13 @@ func TestIdentity(t *testing.T) {
 	defer server.Close()
 
 	registerError := g.Register(context.Background(), credential)
-	assert.Nil(t, registerError, "did not expect and error")
+	assert.Nil(t, registerError, "did not expect an error")
 
 	token, authenticateError := g.Authenticate(context.Background(), credential)
-	assert.Nil(t, authenticateError, "did not expect and error")
+	assert.Nil(t, authenticateError, "did not expect an error")
 
 	identity, identityError := g.Identity(context.Background(), token)
-	assert.Nil(t, identityError, "did not expect and error")
+	assert.Nil(t, identityError, "did not expect an error")
 
 	var rescount int
 
@@ -144,7 +144,7 @@ func TestIdentity(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		assert.Positive(t, rescount, "expected rescount to grow by this moment")
 		err := identity.Delete(context.Background(), (gophkeeper.ResourceID)(rescount-1))
-		assert.Nil(t, err, "did not expect and error")
+		assert.Nil(t, err, "did not expect an error")
 		rescount--
 		t.Run("Invalid RID", func(t *testing.T) {
 			err := identity.Delete(context.Background(), -1)
