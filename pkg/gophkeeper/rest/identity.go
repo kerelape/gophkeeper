@@ -26,8 +26,8 @@ var _ gophkeeper.Identity = (*Identity)(nil)
 
 // StorePiece implements Identity.
 func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, password string) (gophkeeper.ResourceID, error) {
-	var endpoint = fmt.Sprintf("%s/vault/piece", i.Server)
-	var content, contentError = json.Marshal(
+	endpoint := fmt.Sprintf("%s/vault/piece", i.Server)
+	content, contentError := json.Marshal(
 		map[string]any{
 			"meta":    piece.Meta,
 			"content": base64.RawStdEncoding.EncodeToString(piece.Content),
@@ -36,7 +36,7 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 	if contentError != nil {
 		return -1, contentError
 	}
-	var request, requestError = http.NewRequestWithContext(
+	request, requestError := http.NewRequestWithContext(
 		ctx,
 		http.MethodPut, endpoint,
 		bytes.NewReader(content),
@@ -47,7 +47,7 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 	request.Header.Set("Authorization", (string)(i.Token))
 	request.Header.Set("X-Password", password)
 
-	var response, responseError = i.Client.Do(request)
+	response, responseError := i.Client.Do(request)
 	if responseError != nil {
 		return -1, responseError
 	}
@@ -77,8 +77,8 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 
 // RestorePiece implements Identity.
 func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, password string) (gophkeeper.Piece, error) {
-	var endpoint = fmt.Sprintf("%s/vault/piece/%d", i.Server, rid)
-	var request, requestError = http.NewRequestWithContext(
+	endpoint := fmt.Sprintf("%s/vault/piece/%d", i.Server, rid)
+	request, requestError := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet, endpoint,
 		nil,
@@ -89,13 +89,13 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 	request.Header.Set("Authorization", (string)(i.Token))
 	request.Header.Set("X-Password", password)
 
-	var response, responseError = i.Client.Do(request)
+	response, responseError := i.Client.Do(request)
 	if responseError != nil {
 		return gophkeeper.Piece{}, responseError
 	}
 	switch response.StatusCode {
 	case http.StatusOK:
-		var content = make(map[string]any)
+		content := make(map[string]any)
 		if err := json.NewDecoder(response.Body).Decode(&content); err != nil {
 			return gophkeeper.Piece{}, errors.Join(
 				fmt.Errorf("parse response: %w", err),
@@ -112,7 +112,7 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 			)
 		}
 		if content, ok := content["content"].(string); ok {
-			var decodedContent, decodedContentError = base64.RawStdEncoding.DecodeString(content)
+			decodedContent, decodedContentError := base64.RawStdEncoding.DecodeString(content)
 			if decodedContentError != nil {
 				return gophkeeper.Piece{}, errors.Join(
 					fmt.Errorf("decode content: %w", decodedContentError),
@@ -143,8 +143,8 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 
 // StoreBlob implements Identity.
 func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password string) (gophkeeper.ResourceID, error) {
-	var endpoint = fmt.Sprintf("%s/vault/blob", i.Server)
-	var request, requestError = http.NewRequestWithContext(
+	endpoint := fmt.Sprintf("%s/vault/blob", i.Server)
+	request, requestError := http.NewRequestWithContext(
 		ctx,
 		http.MethodPut, endpoint,
 		blob.Content,
@@ -184,8 +184,8 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 
 // RestoreBlob implements Identity.
 func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, password string) (gophkeeper.Blob, error) {
-	var endpoint = fmt.Sprintf("%s/vault/blob/%d", i.Server, rid)
-	var request, requestError = http.NewRequestWithContext(
+	endpoint := fmt.Sprintf("%s/vault/blob/%d", i.Server, rid)
+	request, requestError := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet, endpoint,
 		nil,
@@ -196,13 +196,13 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 	request.Header.Set("Authorization", (string)(i.Token))
 	request.Header.Set("X-Password", password)
 
-	var response, responseError = i.Client.Do(request)
+	response, responseError := i.Client.Do(request)
 	if responseError != nil {
 		return gophkeeper.Blob{}, responseError
 	}
 	switch response.StatusCode {
 	case http.StatusOK:
-		var blob = gophkeeper.Blob{
+		blob := gophkeeper.Blob{
 			Meta:    response.Header.Get("X-Meta"),
 			Content: response.Body,
 		}
@@ -223,8 +223,8 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 
 // Delete implements Identity.
 func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error {
-	var endpoint = fmt.Sprintf("%s/vault/%d", i.Server, rid)
-	var request, requestError = http.NewRequestWithContext(
+	endpoint := fmt.Sprintf("%s/vault/%d", i.Server, rid)
+	request, requestError := http.NewRequestWithContext(
 		ctx,
 		http.MethodDelete, endpoint,
 		nil,
@@ -256,8 +256,8 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 
 // List implements Identity.
 func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
-	var endpoint = fmt.Sprintf("%s/vault", i.Server)
-	var request, requestError = http.NewRequestWithContext(
+	endpoint := fmt.Sprintf("%s/vault", i.Server)
+	request, requestError := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet, endpoint,
 		nil,
@@ -267,7 +267,7 @@ func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 	}
 	request.Header.Set("Authorization", (string)(i.Token))
 
-	var response, responseError = i.Client.Do(request)
+	response, responseError := i.Client.Do(request)
 	if responseError != nil {
 		return nil, responseError
 	}
@@ -275,7 +275,7 @@ func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 
 	switch response.StatusCode {
 	case http.StatusOK:
-		var responseContent = make(
+		responseContent := make(
 			[]struct {
 				Meta string                  `json:"meta"`
 				RID  gophkeeper.ResourceID   `json:"rid"`
@@ -286,7 +286,7 @@ func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 		if err := json.NewDecoder(response.Body).Decode(&responseContent); err != nil {
 			return nil, err
 		}
-		var resources = make([]gophkeeper.Resource, 0, len(responseContent))
+		resources := make([]gophkeeper.Resource, 0, len(responseContent))
 		for _, responseResource := range responseContent {
 			resources = append(
 				resources,
@@ -298,8 +298,6 @@ func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 			)
 		}
 		return resources, nil
-	case http.StatusUnauthorized:
-		return nil, gophkeeper.ErrBadCredential
 	case http.StatusInternalServerError:
 		return nil, ErrServerIsDown
 	default:
