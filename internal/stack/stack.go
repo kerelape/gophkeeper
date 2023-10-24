@@ -6,7 +6,7 @@ type Stack[T any] []T
 
 // Pop returns top element of the stack.
 func (s *Stack[T]) Pop() T {
-	var element = (*s)[len(*s)-1]
+	element := (*s)[len(*s)-1]
 	*s = (*s)[:len(*s)-1]
 	return element
 }

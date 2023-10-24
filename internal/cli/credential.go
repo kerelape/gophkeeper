@@ -21,7 +21,7 @@ type credentialModel struct {
 }
 
 func newCredentialModel() credentialModel {
-	var m = credentialModel{
+	m := credentialModel{
 		username: textinput.New(),
 		password: textinput.New(),
 	}
@@ -38,7 +38,7 @@ func newCredentialModel() credentialModel {
 }
 
 func credential(ctx context.Context) (string, string, error) {
-	var m, err = tea.NewProgram(
+	m, err := tea.NewProgram(
 		newCredentialModel(),
 		tea.WithAltScreen(),
 		tea.WithContext(ctx),
@@ -108,7 +108,7 @@ func (m credentialModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View implements tea.Model.
 func (m credentialModel) View() string {
-	var help = help.New()
+	help := help.New()
 	help.Width = 64
 	return form(
 		m.width, m.height,

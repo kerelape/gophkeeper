@@ -31,14 +31,14 @@ func (l *listCommand) Execute(ctx context.Context, args stack.Stack[string]) (bo
 	if len(args) > 0 {
 		return false, errors.New("expected 0 arguments")
 	}
-	var gophkeeperIdentity, identityError = authenticate(ctx, l.gophkeeper)
+	gophkeeperIdentity, identityError := authenticate(ctx, l.gophkeeper)
 	if identityError != nil {
 		return true, identityError
 	}
-	var identity = identity{
+	identity := identity{
 		origin: gophkeeperIdentity,
 	}
-	var resources, resourcesError = identity.List(ctx)
+	resources, resourcesError := identity.List(ctx)
 	if resourcesError != nil {
 		return true, resourcesError
 	}

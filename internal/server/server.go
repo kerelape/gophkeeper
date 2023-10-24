@@ -55,7 +55,7 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	)
 
-	var manager = runnable.NewManager()
+	manager := runnable.NewManager()
 	manager.Add(&database)
 	manager.Add(&restDaemon)
 	return manager.Build().Run(ctx)

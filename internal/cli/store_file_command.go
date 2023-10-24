@@ -31,17 +31,17 @@ func (s *storeFileCommand) Execute(ctx context.Context, args stack.Stack[string]
 		return false, errors.New("expected 1 argument")
 	}
 
-	var gophkeeperIdentity, gophkeeperIdentityError = authenticate(ctx, s.gophkeeper)
+	gophkeeperIdentity, gophkeeperIdentityError := authenticate(ctx, s.gophkeeper)
 	if gophkeeperIdentityError != nil {
 		return true, gophkeeperIdentityError
 	}
 
-	var vaultPassword, vaultPasswordError = vaultPassword(ctx)
+	vaultPassword, vaultPasswordError := vaultPassword(ctx)
 	if vaultPasswordError != nil {
 		return true, vaultPasswordError
 	}
 
-	var description, descriptionError = description(ctx)
+	description, descriptionError := description(ctx)
 	if descriptionError != nil {
 		return true, descriptionError
 	}
@@ -55,7 +55,7 @@ func (s *storeFileCommand) Execute(ctx context.Context, args stack.Stack[string]
 			path:        args.Pop(),
 		}
 	)
-	var rid, ridError = identity.StoreFile(ctx, resource, vaultPassword)
+	rid, ridError := identity.StoreFile(ctx, resource, vaultPassword)
 	if ridError != nil {
 		return true, ridError
 	}

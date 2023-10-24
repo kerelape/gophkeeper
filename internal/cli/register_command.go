@@ -26,24 +26,24 @@ func (r *registerCommand) Execute(ctx context.Context, args stack.Stack[string])
 	if len(args) > 0 {
 		return false, errors.New("expected 0 arguments")
 	}
-	var input = bufio.NewReader(os.Stdin)
+	input := bufio.NewReader(os.Stdin)
 
 	fmt.Print("Type new identity's username: ")
-	var username, usernameError = input.ReadString('\n')
+	username, usernameError := input.ReadString('\n')
 	if usernameError != nil {
 		return true, usernameError
 	}
 	username = strings.TrimSuffix(username, "\n")
 
 	fmt.Print("Type new identity's password: ")
-	var password1, password1Error = term.ReadPassword((int)(syscall.Stdin))
+	password1, password1Error := term.ReadPassword((int)(syscall.Stdin))
 	if password1Error != nil {
 		return true, password1Error
 	}
 
 	fmt.Println()
 	fmt.Print("Retype new identity's password: ")
-	var password2, password2Error = term.ReadPassword((int)(syscall.Stdin))
+	password2, password2Error := term.ReadPassword((int)(syscall.Stdin))
 	if password2Error != nil {
 		return true, password1Error
 	}
@@ -53,7 +53,7 @@ func (r *registerCommand) Execute(ctx context.Context, args stack.Stack[string])
 		return true, errors.New("passwords do not match")
 	}
 
-	var credential = gophkeeper.Credential{
+	credential := gophkeeper.Credential{
 		Username: username,
 		Password: (string)(password1),
 	}

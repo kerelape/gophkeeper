@@ -50,7 +50,7 @@ func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passwo
 		return -1, err
 	}
 
-	var block, blockError = aes.NewCipher(
+	block, blockError := aes.NewCipher(
 		pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New),
 	)
 	if blockError != nil {
@@ -62,17 +62,17 @@ func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passwo
 		return -1, err
 	}
 
-	var reader = cipher.StreamReader{
+	reader := cipher.StreamReader{
 		S: i.Cipher.Encrypter(block, iv),
 		R: bytes.NewReader(piece.Content),
 	}
-	var content, contentError = io.ReadAll(reader)
+	content, contentError := io.ReadAll(reader)
 	if contentError != nil {
 		return -1, contentError
 	}
 	piece.Content = content
 
-	var wrappedMeta, wrappedMetaError = json.Marshal(
+	wrappedMeta, wrappedMetaError := json.Marshal(
 		meta{
 			IV:      iv,
 			Salt:    salt,
@@ -89,7 +89,7 @@ func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passwo
 
 // RestorePiece implements gophkeeper.Identity.
 func (i Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, password string) (gophkeeper.Piece, error) {
-	var piece, pieceError = i.Origin.RestorePiece(ctx, rid, password)
+	piece, pieceError := i.Origin.RestorePiece(ctx, rid, password)
 	if pieceError != nil {
 		return gophkeeper.Piece{}, pieceError
 	}
@@ -100,18 +100,18 @@ func (i Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, p
 	}
 	piece.Meta = meta.Content
 
-	var block, blockError = aes.NewCipher(
+	block, blockError := aes.NewCipher(
 		pbkdf2.Key(([]byte)(password), meta.Salt, keyIter, keyLen, sha256.New),
 	)
 	if blockError != nil {
 		return gophkeeper.Piece{}, blockError
 	}
 
-	var reader = cipher.StreamReader{
+	reader := cipher.StreamReader{
 		S: i.Cipher.Decrypter(block, meta.IV),
 		R: bytes.NewReader(piece.Content),
 	}
-	var content, contentError = io.ReadAll(reader)
+	content, contentError := io.ReadAll(reader)
 	if contentError != nil {
 		return gophkeeper.Piece{}, contentError
 	}
@@ -126,7 +126,7 @@ func (i Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password 
 	if _, err := rand.Read(salt); err != nil {
 		return -1, err
 	}
-	var block, blockError = aes.NewCipher(
+	block, blockError := aes.NewCipher(
 		pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New),
 	)
 	if blockError != nil {
@@ -137,7 +137,7 @@ func (i Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password 
 		return -1, err
 	}
 
-	var meta, metaError = json.Marshal(
+	meta, metaError := json.Marshal(
 		meta{
 			IV:      iv,
 			Salt:    salt,
@@ -169,7 +169,7 @@ func (i Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password 
 
 // RestoreBlob implements gophkeeper.Identity.
 func (i Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, password string) (gophkeeper.Blob, error) {
-	var blob, blobError = i.Origin.RestoreBlob(ctx, rid, password)
+	blob, blobError := i.Origin.RestoreBlob(ctx, rid, password)
 	if blobError != nil {
 		return gophkeeper.Blob{}, blobError
 	}
@@ -179,14 +179,14 @@ func (i Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, pa
 		return gophkeeper.Blob{}, err
 	}
 
-	var block, blockError = aes.NewCipher(
+	block, blockError := aes.NewCipher(
 		pbkdf2.Key(([]byte)(password), meta.Salt, keyIter, keyLen, sha256.New),
 	)
 	if blockError != nil {
 		return gophkeeper.Blob{}, blockError
 	}
 
-	var decryptedBlob = gophkeeper.Blob{
+	decryptedBlob := gophkeeper.Blob{
 		Meta: meta.Content,
 		Content: &composedreadcloser.ComposedReadCloser{
 			Reader: cipher.StreamReader{
@@ -201,7 +201,7 @@ func (i Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, pa
 
 // List implements gophkeeper.Identity.
 func (i Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
-	var resources, resourcesError = i.Origin.List(ctx)
+	resources, resourcesError := i.Origin.List(ctx)
 	if resourcesError != nil {
 		return nil, resourcesError
 	}

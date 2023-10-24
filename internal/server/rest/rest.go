@@ -38,7 +38,7 @@ func (r *Rest) Run(ctx context.Context) error {
 	)
 	go func() {
 		if r.UseTLS {
-			var certmanager = autocert.Manager{
+			certmanager := autocert.Manager{
 				Cache:      autocert.DirCache("cache"),
 				Prompt:     autocert.AcceptTOS,
 				HostPolicy: autocert.HostWhitelist(r.HostWhilelist...),

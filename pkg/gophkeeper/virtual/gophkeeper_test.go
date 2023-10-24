@@ -19,7 +19,7 @@ func TestGophkeeper(t *testing.T) {
 				Password: "qwerty",
 			}
 		)
-		var registerError = g.Register(context.Background(), credential)
+		registerError := g.Register(context.Background(), credential)
 		assert.Nil(t, registerError, "expected to successfully register")
 	})
 	t.Run("Subsequent registration with same credential", func(t *testing.T) {
@@ -30,10 +30,10 @@ func TestGophkeeper(t *testing.T) {
 				Password: "qwerty",
 			}
 		)
-		var registerError = g.Register(context.Background(), credential)
+		registerError := g.Register(context.Background(), credential)
 		assert.Nil(t, registerError, "expected to successfully register")
 
-		var reregisterError = g.Register(context.Background(), credential)
+		reregisterError := g.Register(context.Background(), credential)
 		assert.NotNil(
 			t,
 			reregisterError,
@@ -45,7 +45,6 @@ func TestGophkeeper(t *testing.T) {
 			gophkeeper.ErrIdentityDuplicate,
 			"unexpected error on reregister",
 		)
-
 	})
 	t.Run("Authentication", func(t *testing.T) {
 		var (
@@ -55,22 +54,21 @@ func TestGophkeeper(t *testing.T) {
 				Password: "qwerty",
 			}
 		)
-		var registerError = g.Register(context.Background(), credential)
+		registerError := g.Register(context.Background(), credential)
 		assert.Nil(t, registerError, "expected to successfully register")
 
-		var token, authenticateError = g.Authenticate(context.Background(), credential)
+		token, authenticateError := g.Authenticate(context.Background(), credential)
 		assert.Nil(t, authenticateError, "expected to successfully authentiate")
 
-		var _, identityError = g.Identity(context.Background(), token)
+		_, identityError := g.Identity(context.Background(), token)
 		assert.Nil(t, identityError, "expected to successfully get identity")
-
 	})
 	t.Run("Authentication with invalid credential", func(t *testing.T) {
 		var (
 			g          = virtual.New(time.Hour, t.TempDir())
 			credential = gophkeeper.Credential{}
 		)
-		var _, err = g.Authenticate(context.Background(), credential)
+		_, err := g.Authenticate(context.Background(), credential)
 		assert.NotNil(
 			t,
 			err,
@@ -92,15 +90,15 @@ func TestGophkeeper(t *testing.T) {
 				Password: "qwerty",
 			}
 		)
-		var registerError = g.Register(context.Background(), credential)
+		registerError := g.Register(context.Background(), credential)
 		assert.Nil(t, registerError, "expected to successfully register")
 
-		var token, authenticateError = g.Authenticate(context.Background(), credential)
+		token, authenticateError := g.Authenticate(context.Background(), credential)
 		assert.Nil(t, authenticateError, "expected to successfully authentiate")
 
 		time.Sleep(timeout + time.Second)
 
-		var _, identityError = g.Identity(context.Background(), token)
+		_, identityError := g.Identity(context.Background(), token)
 		assert.NotNil(t, identityError, "expected to get an error with an outdated token")
 		assert.ErrorIs(
 			t,

@@ -13,13 +13,13 @@ import (
 func main() {
 	log.SetFlags(0)
 	log.SetPrefix("")
-	var server = flag.String("s", "", "Gophkeeper address")
+	server := flag.String("s", "", "Gophkeeper address")
 	flag.Parse()
 	if *server == "" {
 		log.Fatal("missing -s flag")
 	}
 
-	var application = cli.CLI{
+	application := cli.CLI{
 		Gophkeeper: &rest.Gophkeeper{
 			Server: *server,
 			Client: http.Client{},

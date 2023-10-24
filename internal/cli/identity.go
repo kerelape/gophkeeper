@@ -65,11 +65,11 @@ type (
 )
 
 func (i identity) List(ctx context.Context) ([]resource, error) {
-	var resources, resourcesError = i.origin.List(ctx)
+	resources, resourcesError := i.origin.List(ctx)
 	if resourcesError != nil {
 		return nil, resourcesError
 	}
-	var result = make([]resource, 0, len(resources))
+	result := make([]resource, 0, len(resources))
 	for _, r := range resources {
 		var resource resource
 		resource.RID = r.ID
@@ -88,7 +88,7 @@ func (i identity) List(ctx context.Context) ([]resource, error) {
 }
 
 func (i identity) StoreCredential(ctx context.Context, cred credentialResource, vaultPassword string) (gophkeeper.ResourceID, error) {
-	var meta, metaError = json.Marshal(
+	meta, metaError := json.Marshal(
 		map[string]any{
 			"type":        (int)(resourceTypeCredential),
 			"description": cred.description,
@@ -97,7 +97,7 @@ func (i identity) StoreCredential(ctx context.Context, cred credentialResource, 
 	if metaError != nil {
 		return -1, metaError
 	}
-	var content, contentError = json.Marshal(
+	content, contentError := json.Marshal(
 		map[string]any{
 			"username": cred.username,
 			"password": cred.password,
@@ -106,7 +106,7 @@ func (i identity) StoreCredential(ctx context.Context, cred credentialResource, 
 	if contentError != nil {
 		return -1, contentError
 	}
-	var piece = gophkeeper.Piece{
+	piece := gophkeeper.Piece{
 		Meta:    (string)(meta),
 		Content: content,
 	}
@@ -114,7 +114,7 @@ func (i identity) StoreCredential(ctx context.Context, cred credentialResource, 
 }
 
 func (i identity) RestoreCredential(ctx context.Context, rid gophkeeper.ResourceID, vaultPassword string) (credentialResource, error) {
-	var piece, pieceError = i.origin.RestorePiece(ctx, rid, vaultPassword)
+	piece, pieceError := i.origin.RestorePiece(ctx, rid, vaultPassword)
 	if pieceError != nil {
 		return credentialResource{}, pieceError
 	}
@@ -138,7 +138,7 @@ func (i identity) RestoreCredential(ctx context.Context, rid gophkeeper.Resource
 		return credentialResource{}, err
 	}
 
-	var res = credentialResource{
+	res := credentialResource{
 		description: meta.Description,
 		username:    content.Username,
 		password:    content.Password,
@@ -147,7 +147,7 @@ func (i identity) RestoreCredential(ctx context.Context, rid gophkeeper.Resource
 }
 
 func (i identity) StoreText(ctx context.Context, resource textResource, vaultPassword string) (gophkeeper.ResourceID, error) {
-	var meta, metaError = json.Marshal(
+	meta, metaError := json.Marshal(
 		map[string]any{
 			"type":        (int)(resourceTypeText),
 			"description": resource.description,
@@ -156,7 +156,7 @@ func (i identity) StoreText(ctx context.Context, resource textResource, vaultPas
 	if metaError != nil {
 		return -1, metaError
 	}
-	var piece = gophkeeper.Piece{
+	piece := gophkeeper.Piece{
 		Meta:    (string)(meta),
 		Content: ([]byte)(resource.content),
 	}
@@ -164,7 +164,7 @@ func (i identity) StoreText(ctx context.Context, resource textResource, vaultPas
 }
 
 func (i identity) RestoreText(ctx context.Context, rid gophkeeper.ResourceID, vaultPassword string) (textResource, error) {
-	var piece, pieceError = i.origin.RestorePiece(ctx, rid, vaultPassword)
+	piece, pieceError := i.origin.RestorePiece(ctx, rid, vaultPassword)
 	if pieceError != nil {
 		return textResource{}, pieceError
 	}
@@ -180,7 +180,7 @@ func (i identity) RestoreText(ctx context.Context, rid gophkeeper.ResourceID, va
 		return textResource{}, errors.New("invalid resource type")
 	}
 
-	var resource = textResource{
+	resource := textResource{
 		description: meta.Description,
 		content:     (string)(piece.Content),
 	}
@@ -188,7 +188,7 @@ func (i identity) RestoreText(ctx context.Context, rid gophkeeper.ResourceID, va
 }
 
 func (i identity) StoreFile(ctx context.Context, resource fileResource, vaultPassword string) (gophkeeper.ResourceID, error) {
-	var meta, metaError = json.Marshal(
+	meta, metaError := json.Marshal(
 		map[string]any{
 			"type":        (int)(resourceTypeFile),
 			"description": resource.description,
@@ -198,16 +198,16 @@ func (i identity) StoreFile(ctx context.Context, resource fileResource, vaultPas
 		return -1, metaError
 	}
 
-	var file, fileError = os.Open(resource.path)
+	file, fileError := os.Open(resource.path)
 	if fileError != nil {
 		return -1, fileError
 	}
 
-	var blob = gophkeeper.Blob{
+	blob := gophkeeper.Blob{
 		Meta:    (string)(meta),
 		Content: file,
 	}
-	var rid, ridError = i.origin.StoreBlob(ctx, blob, vaultPassword)
+	rid, ridError := i.origin.StoreBlob(ctx, blob, vaultPassword)
 	if ridError != nil {
 		return -1, ridError
 	}
@@ -216,7 +216,7 @@ func (i identity) StoreFile(ctx context.Context, resource fileResource, vaultPas
 }
 
 func (i identity) RestoreFile(ctx context.Context, rid gophkeeper.ResourceID, path, vaultPassword string) (fileResource, error) {
-	var blob, blobError = i.origin.RestoreBlob(ctx, rid, vaultPassword)
+	blob, blobError := i.origin.RestoreBlob(ctx, rid, vaultPassword)
 	if blobError != nil {
 		return fileResource{}, blobError
 	}
@@ -233,18 +233,18 @@ func (i identity) RestoreFile(ctx context.Context, rid gophkeeper.ResourceID, pa
 		return fileResource{}, errors.New("invalid resource type")
 	}
 
-	var file, fileError = os.Create(path)
+	file, fileError := os.Create(path)
 	if fileError != nil {
 		return fileResource{}, fileError
 	}
 	defer file.Close()
 
-	var input = bufio.NewReader(blob.Content)
+	input := bufio.NewReader(blob.Content)
 	if _, err := input.WriteTo(file); err != nil {
 		return fileResource{}, err
 	}
 
-	var resource = fileResource{
+	resource := fileResource{
 		path:        file.Name(),
 		description: meta.Description,
 	}
@@ -252,7 +252,7 @@ func (i identity) RestoreFile(ctx context.Context, rid gophkeeper.ResourceID, pa
 }
 
 func (i identity) StoreCard(ctx context.Context, resource cardResource, vaultPassword string) (gophkeeper.ResourceID, error) {
-	var meta, metaError = json.Marshal(
+	meta, metaError := json.Marshal(
 		map[string]any{
 			"type":        (int)(resourceTypeCard),
 			"description": resource.description,
@@ -262,7 +262,7 @@ func (i identity) StoreCard(ctx context.Context, resource cardResource, vaultPas
 		return -1, metaError
 	}
 
-	var content, contentError = json.Marshal(
+	content, contentError := json.Marshal(
 		map[string]any{
 			"ccn":    resource.ccn,
 			"exp":    resource.exp,
@@ -274,11 +274,11 @@ func (i identity) StoreCard(ctx context.Context, resource cardResource, vaultPas
 		return -1, contentError
 	}
 
-	var piece = gophkeeper.Piece{
+	piece := gophkeeper.Piece{
 		Meta:    (string)(meta),
 		Content: content,
 	}
-	var rid, ridError = i.origin.StorePiece(ctx, piece, vaultPassword)
+	rid, ridError := i.origin.StorePiece(ctx, piece, vaultPassword)
 	if ridError != nil {
 		return -1, ridError
 	}
@@ -287,7 +287,7 @@ func (i identity) StoreCard(ctx context.Context, resource cardResource, vaultPas
 }
 
 func (i identity) RestoreCard(ctx context.Context, rid gophkeeper.ResourceID, vaultPassword string) (cardResource, error) {
-	var piece, pieceError = i.origin.RestorePiece(ctx, rid, vaultPassword)
+	piece, pieceError := i.origin.RestorePiece(ctx, rid, vaultPassword)
 	if pieceError != nil {
 		return cardResource{}, pieceError
 	}
@@ -313,7 +313,7 @@ func (i identity) RestoreCard(ctx context.Context, rid gophkeeper.ResourceID, va
 		return cardResource{}, err
 	}
 
-	var resource = cardResource{
+	resource := cardResource{
 		description: meta.Description,
 		cardInfo: cardInfo{
 			ccn:    content.CCN,

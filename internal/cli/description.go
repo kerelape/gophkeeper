@@ -17,7 +17,7 @@ type descriptionModel struct {
 }
 
 func newDescriptionModel() descriptionModel {
-	var m = descriptionModel{
+	m := descriptionModel{
 		description: textarea.New(),
 	}
 	m.description.ShowLineNumbers = false
@@ -31,7 +31,7 @@ func newDescriptionModel() descriptionModel {
 }
 
 func description(ctx context.Context) (string, error) {
-	var m, err = tea.NewProgram(
+	m, err := tea.NewProgram(
 		newDescriptionModel(),
 		tea.WithAltScreen(),
 		tea.WithContext(ctx),

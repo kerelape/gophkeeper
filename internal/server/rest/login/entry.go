@@ -17,7 +17,7 @@ type Entry struct {
 
 // Route routes this entry into an http.Handler.
 func (e *Entry) Route() http.Handler {
-	var router = chi.NewRouter()
+	router := chi.NewRouter()
 	router.Post("/", e.login)
 	return router
 }
@@ -28,7 +28,7 @@ func (e *Entry) login(out http.ResponseWriter, in *http.Request) {
 		Password *string `json:"password"`
 	}
 	if err := json.NewDecoder(in.Body).Decode(&requestBody); err != nil {
-		var status = http.StatusBadRequest
+		status := http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
@@ -37,7 +37,7 @@ func (e *Entry) login(out http.ResponseWriter, in *http.Request) {
 	if username := requestBody.Username; username != nil {
 		credential.Username = *username
 	} else {
-		var status = http.StatusBadRequest
+		status := http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
@@ -45,14 +45,14 @@ func (e *Entry) login(out http.ResponseWriter, in *http.Request) {
 	if password := requestBody.Password; password != nil {
 		credential.Password = *password
 	} else {
-		var status = http.StatusBadRequest
+		status := http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
 
-	var token, authenticateError = e.Gophkeeper.Authenticate(in.Context(), credential)
+	token, authenticateError := e.Gophkeeper.Authenticate(in.Context(), credential)
 	if authenticateError != nil {
-		var status = http.StatusInternalServerError
+		status := http.StatusInternalServerError
 		if errors.Is(authenticateError, gophkeeper.ErrBadCredential) {
 			status = http.StatusUnauthorized
 		}

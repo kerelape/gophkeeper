@@ -59,12 +59,12 @@ func (i *Identity) RestorePiece(_ context.Context, rid gophkeeper.ResourceID, pa
 		return gophkeeper.Piece{}, gophkeeper.ErrResourceNotFound
 	}
 
-	var resource = i.storage.resources[rid]
+	resource := i.storage.resources[rid]
 	if resource.owner != i.username || resource._type != gophkeeper.ResourceTypePiece {
 		return gophkeeper.Piece{}, gophkeeper.ErrResourceNotFound
 	}
 
-	var piece = gophkeeper.Piece{
+	piece := gophkeeper.Piece{
 		Meta:    resource.meta,
 		Content: i.storage.pieces[resource.id].content,
 	}
@@ -81,11 +81,11 @@ func (i *Identity) StoreBlob(_ context.Context, origin gophkeeper.Blob, password
 		return -1, gophkeeper.ErrBadCredential
 	}
 
-	var dir, dirError = os.MkdirTemp(i.blobsDir, "blobs-*")
+	dir, dirError := os.MkdirTemp(i.blobsDir, "blobs-*")
 	if dirError != nil {
 		return -1, dirError
 	}
-	var file, fileError = os.CreateTemp(dir, "blob-*")
+	file, fileError := os.CreateTemp(dir, "blob-*")
 	if fileError != nil {
 		return -1, fileError
 	}
@@ -128,17 +128,17 @@ func (i *Identity) RestoreBlob(_ context.Context, rid gophkeeper.ResourceID, pas
 		return gophkeeper.Blob{}, gophkeeper.ErrResourceNotFound
 	}
 
-	var resource = i.storage.resources[rid]
+	resource := i.storage.resources[rid]
 	if resource.owner != i.username || resource._type != gophkeeper.ResourceTypeBlob {
 		return gophkeeper.Blob{}, gophkeeper.ErrResourceNotFound
 	}
 
-	var file, fileError = os.Open(i.storage.blobs[resource.id].location)
+	file, fileError := os.Open(i.storage.blobs[resource.id].location)
 	if fileError != nil {
 		return gophkeeper.Blob{}, fileError
 	}
 
-	var blob = gophkeeper.Blob{
+	blob := gophkeeper.Blob{
 		Meta:    resource.meta,
 		Content: file,
 	}
@@ -168,7 +168,7 @@ func (i *Identity) List(_ context.Context) ([]gophkeeper.Resource, error) {
 	i.storage.mutex.Lock()
 	defer i.storage.mutex.Unlock()
 
-	var resources = make([]gophkeeper.Resource, 0)
+	resources := make([]gophkeeper.Resource, 0)
 	for rid, resource := range i.storage.resources {
 		if resource.owner != i.username {
 			continue

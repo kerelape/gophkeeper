@@ -18,7 +18,7 @@ type Entry struct {
 
 // Route routes login entry.
 func (e *Entry) Route() http.Handler {
-	var router = chi.NewRouter()
+	router := chi.NewRouter()
 	router.Post("/", e.register)
 	return router
 }
@@ -29,7 +29,7 @@ func (e *Entry) register(out http.ResponseWriter, in *http.Request) {
 		Password *string `json:"password"`
 	}
 	if err := json.NewDecoder(in.Body).Decode(&requestBody); err != nil {
-		var status = http.StatusBadRequest
+		status := http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
@@ -38,7 +38,7 @@ func (e *Entry) register(out http.ResponseWriter, in *http.Request) {
 	if username := requestBody.Username; username != nil {
 		credential.Username = *username
 	} else {
-		var status = http.StatusBadRequest
+		status := http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
@@ -46,13 +46,13 @@ func (e *Entry) register(out http.ResponseWriter, in *http.Request) {
 	if password := requestBody.Password; password != nil {
 		credential.Password = *password
 	} else {
-		var status = http.StatusBadRequest
+		status := http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
 
 	if err := e.Gophkeeper.Register(in.Context(), credential); err != nil {
-		var status = http.StatusInternalServerError
+		status := http.StatusInternalServerError
 		if errors.Is(err, gophkeeper.ErrBadCredential) {
 			status = http.StatusBadRequest
 		}

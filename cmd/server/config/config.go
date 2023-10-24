@@ -33,7 +33,7 @@ func Read(config *Config) error {
 
 // Description returns config description.
 func (c *Config) Description() string {
-	var description, err = cleanenv.GetDescription(c, nil)
+	description, err := cleanenv.GetDescription(c, nil)
 	if err != nil {
 		panic(err)
 	}

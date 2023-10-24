@@ -44,7 +44,7 @@ var (
 
 // Register implements Repository.
 func (r *Gophkeeper) Register(ctx context.Context, credential gophkeeper.Credential) error {
-	var connection, connectionError = r.connection.Get(ctx)
+	connection, connectionError := r.connection.Get(ctx)
 	if connectionError != nil {
 		return connectionError
 	}
@@ -56,7 +56,7 @@ func (r *Gophkeeper) Register(ctx context.Context, credential gophkeeper.Credent
 		return gophkeeper.ErrBadCredential
 	}
 
-	var password, passwordError = bcrypt.GenerateFromPassword(
+	password, passwordError := bcrypt.GenerateFromPassword(
 		([]byte)(credential.Password),
 		bcrypt.DefaultCost,
 	)
@@ -82,12 +82,12 @@ func (r *Gophkeeper) Register(ctx context.Context, credential gophkeeper.Credent
 
 // Authenticate implements Repository.
 func (r *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Credential) (gophkeeper.Token, error) {
-	var connection, connectionError = r.connection.Get(ctx)
+	connection, connectionError := r.connection.Get(ctx)
 	if connectionError != nil {
 		return (gophkeeper.Token)(""), connectionError
 	}
 
-	var identity = Identity{
+	identity := Identity{
 		Connection:       connection,
 		PasswordEncoding: r.PasswordEncoding,
 		Username:         credential.Username,
@@ -96,14 +96,14 @@ func (r *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Cre
 		return (gophkeeper.Token)(""), err
 	}
 
-	var rawToken = jwt.NewWithClaims(
+	rawToken := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"exp": time.Now().Add(r.TokenLifespan).Unix(),
 			"sub": credential.Username,
 		},
 	)
-	var token, signTokenError = rawToken.SignedString(r.TokenSecret)
+	token, signTokenError := rawToken.SignedString(r.TokenSecret)
 	if signTokenError != nil {
 		return (gophkeeper.Token)(""), signTokenError
 	}
@@ -112,7 +112,7 @@ func (r *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Cre
 
 // Identity implements Repository.
 func (r *Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (gophkeeper.Identity, error) {
-	var parsedToken, parseTokenError = jwt.Parse(
+	parsedToken, parseTokenError := jwt.Parse(
 		(string)(token),
 		func(t *jwt.Token) (interface{}, error) {
 			return r.TokenSecret, nil
@@ -122,7 +122,7 @@ func (r *Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (goph
 		return nil, gophkeeper.ErrBadCredential
 	}
 
-	var claims = parsedToken.Claims
+	claims := parsedToken.Claims
 	if exp, err := claims.GetExpirationTime(); err == nil {
 		if exp.Before(time.Now()) {
 			return nil, gophkeeper.ErrBadCredential
@@ -138,12 +138,12 @@ func (r *Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (goph
 		return nil, gophkeeper.ErrBadCredential
 	}
 
-	var connection, connectionError = r.connection.Get(ctx)
+	connection, connectionError := r.connection.Get(ctx)
 	if connectionError != nil {
 		return nil, connectionError
 	}
 
-	var identity = &Identity{
+	identity := &Identity{
 		Connection:       connection,
 		PasswordEncoding: r.PasswordEncoding,
 		Username:         username,
@@ -159,7 +159,7 @@ func (r *Gophkeeper) Run(ctx context.Context) error {
 		return mkdirError
 	}
 
-	var connection, connectError = r.Source.Connect(ctx)
+	connection, connectError := r.Source.Connect(ctx)
 	if connectError != nil {
 		return connectError
 	}

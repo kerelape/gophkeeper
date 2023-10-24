@@ -32,12 +32,12 @@ func (d *deleteCommand) Execute(ctx context.Context, args stack.Stack[string]) (
 		return false, errors.New("expected 1 arguments")
 	}
 
-	var identity, identityError = authenticate(ctx, d.gophkeeper)
+	identity, identityError := authenticate(ctx, d.gophkeeper)
 	if identityError != nil {
 		return true, identityError
 	}
 
-	var rid, ridError = strconv.Atoi(args.Pop())
+	rid, ridError := strconv.Atoi(args.Pop())
 	if ridError != nil {
 		return false, ridError
 	}

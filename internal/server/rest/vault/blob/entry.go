@@ -21,7 +21,7 @@ type Entry struct{}
 
 // Route routes blob entry.
 func (e *Entry) Route() http.Handler {
-	var router = chi.NewRouter()
+	router := chi.NewRouter()
 	router.Use(credential.Middleware)
 	router.Put("/", e.encrypt)
 	router.Get("/{rid}", e.decrypt)
@@ -32,13 +32,13 @@ func (e *Entry) encrypt(out http.ResponseWriter, in *http.Request) {
 	identity := authentication.Identity(in)
 	password := credential.Password(in)
 
-	var blob = gophkeeper.Blob{
+	blob := gophkeeper.Blob{
 		Meta:    in.Header.Get("X-Meta"),
 		Content: in.Body,
 	}
 	rid, storeError := identity.StoreBlob(in.Context(), blob, password)
 	if storeError != nil {
-		var status = http.StatusInternalServerError
+		status := http.StatusInternalServerError
 		if errors.Is(storeError, gophkeeper.ErrBadCredential) {
 			status = http.StatusUnauthorized
 		}
@@ -60,16 +60,16 @@ func (e *Entry) decrypt(out http.ResponseWriter, in *http.Request) {
 	identity := authentication.Identity(in)
 	password := credential.Password(in)
 
-	var rid, ridError = strconv.Atoi(chi.URLParam(in, "rid"))
+	rid, ridError := strconv.Atoi(chi.URLParam(in, "rid"))
 	if ridError != nil {
-		var status = http.StatusBadRequest
+		status := http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
 
-	var blob, restoreError = identity.RestoreBlob(in.Context(), (gophkeeper.ResourceID)(rid), password)
+	blob, restoreError := identity.RestoreBlob(in.Context(), (gophkeeper.ResourceID)(rid), password)
 	if restoreError != nil {
-		var status = http.StatusInternalServerError
+		status := http.StatusInternalServerError
 		if errors.Is(restoreError, gophkeeper.ErrBadCredential) {
 			status = http.StatusUnauthorized
 		}
@@ -86,7 +86,7 @@ func (e *Entry) decrypt(out http.ResponseWriter, in *http.Request) {
 	out.Header().Set("X-Meta", blob.Meta)
 	out.WriteHeader(http.StatusOK)
 
-	var output = bufio.NewWriter(out)
+	output := bufio.NewWriter(out)
 	if _, err := output.ReadFrom(blob.Content); err != nil {
 		log.Printf("failed to write content: %s", err.Error())
 	}

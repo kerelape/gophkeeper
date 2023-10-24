@@ -22,7 +22,7 @@ type textModel struct {
 }
 
 func newTextModel() textModel {
-	var m = textModel{
+	m := textModel{
 		content: textarea.New(),
 		help:    help.New(),
 	}
@@ -37,7 +37,7 @@ func newTextModel() textModel {
 }
 
 func text(ctx context.Context) (string, error) {
-	var m, err = tea.NewProgram(
+	m, err := tea.NewProgram(
 		newTextModel(),
 		tea.WithAltScreen(),
 		tea.WithContext(ctx),

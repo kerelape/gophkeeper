@@ -53,7 +53,7 @@ func (k *Gophkeeper) Register(_ context.Context, credential gophkeeper.Credentia
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 
-	var identityID = k.findIdentity(credential.Username)
+	identityID := k.findIdentity(credential.Username)
 	if identityID != invalidIdentityID {
 		return gophkeeper.ErrIdentityDuplicate
 	}
@@ -73,17 +73,17 @@ func (k *Gophkeeper) Authenticate(_ context.Context, credential gophkeeper.Crede
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 
-	var id = k.findIdentity(credential.Username)
+	id := k.findIdentity(credential.Username)
 	if id == invalidIdentityID {
 		return (gophkeeper.Token)(""), gophkeeper.ErrBadCredential
 	}
 
-	var sessionBytes = make([]byte, 2048)
+	sessionBytes := make([]byte, 2048)
 	if _, err := rand.Read(sessionBytes); err != nil {
 		return (gophkeeper.Token)(""), err
 	}
 
-	var session = (gophkeeper.Token)(base64.URLEncoding.EncodeToString(sessionBytes))
+	session := (gophkeeper.Token)(base64.URLEncoding.EncodeToString(sessionBytes))
 	k.sessions[session] = id
 
 	go func(sessions map[gophkeeper.Token]int, session gophkeeper.Token) {
@@ -103,7 +103,7 @@ func (k *Gophkeeper) Identity(_ context.Context, token gophkeeper.Token) (gophke
 	if _, ok := k.sessions[token]; !ok {
 		return nil, gophkeeper.ErrBadCredential
 	}
-	var identity = &Identity{
+	identity := &Identity{
 		identity: k.identities[k.sessions[token]],
 		storage:  k.storage,
 		blobsDir: k.blobsDir,
@@ -113,7 +113,7 @@ func (k *Gophkeeper) Identity(_ context.Context, token gophkeeper.Token) (gophke
 
 func (k *Gophkeeper) findIdentity(username string) int {
 	for i := range k.identities {
-		var identity = k.identities[i]
+		identity := k.identities[i]
 		if identity.username == username {
 			return i
 		}

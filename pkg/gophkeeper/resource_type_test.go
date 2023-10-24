@@ -28,7 +28,7 @@ func TestResourceType(t *testing.T) {
 		assert.Panics(
 			t,
 			func() {
-				var _ = (gophkeeper.ResourceType)(-1).String()
+				_ = (gophkeeper.ResourceType)(-1).String()
 			},
 			"expected to panic",
 		)

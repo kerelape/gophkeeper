@@ -12,7 +12,7 @@ import (
 )
 
 func authenticate(ctx context.Context, g gophkeeper.Gophkeeper) (gophkeeper.Identity, error) {
-	var m, err = tea.NewProgram(
+	m, err := tea.NewProgram(
 		newAuthenticationModel(),
 		tea.WithAltScreen(),
 		tea.WithContext(ctx),
@@ -27,11 +27,11 @@ func authenticate(ctx context.Context, g gophkeeper.Gophkeeper) (gophkeeper.Iden
 	if model.cancelled {
 		return nil, errors.New("authentiation cancelled by user")
 	}
-	var credential = gophkeeper.Credential{
+	credential := gophkeeper.Credential{
 		Username: model.username.Value(),
 		Password: model.password.Value(),
 	}
-	var token, tokenError = g.Authenticate(ctx, credential)
+	token, tokenError := g.Authenticate(ctx, credential)
 	if tokenError != nil {
 		return nil, tokenError
 	}
@@ -48,7 +48,7 @@ type authenticationModel struct {
 }
 
 func newAuthenticationModel() authenticationModel {
-	var m = authenticationModel{
+	m := authenticationModel{
 		cancelled: false,
 		username:  textinput.New(),
 		password:  textinput.New(),

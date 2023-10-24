@@ -17,15 +17,15 @@ func main() {
 	if err := config.Read(&configuration); err != nil {
 		log.Fatal(configuration.Description())
 	}
-	var secret, decodeSecretError = base64.RawStdEncoding.DecodeString(configuration.Token.Secret)
+	secret, decodeSecretError := base64.RawStdEncoding.DecodeString(configuration.Token.Secret)
 	if decodeSecretError != nil {
 		log.Fatalf("failed to parse token secret: %s", decodeSecretError.Error())
 	}
-	var wd, wdError = os.Getwd()
+	wd, wdError := os.Getwd()
 	if wdError != nil {
 		log.Fatalf(wdError.Error())
 	}
-	var gophkeeper = server.Server{
+	gophkeeper := server.Server{
 		RestAddress:       configuration.Rest.Address,
 		RestUseTLS:        configuration.Rest.UseTLS,
 		RestHostWhilelist: configuration.Rest.HostWhilelist,

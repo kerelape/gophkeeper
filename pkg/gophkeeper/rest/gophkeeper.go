@@ -24,8 +24,8 @@ var _ gophkeeper.Gophkeeper = (*Gophkeeper)(nil)
 
 // Register implements Gophkeeper.
 func (g *Gophkeeper) Register(ctx context.Context, credential gophkeeper.Credential) error {
-	var endpoint = fmt.Sprintf("%s/register", g.Server)
-	var content, marshalError = json.Marshal(
+	endpoint := fmt.Sprintf("%s/register", g.Server)
+	content, marshalError := json.Marshal(
 		map[string]any{
 			"username": credential.Username,
 			"password": credential.Password,
@@ -34,7 +34,7 @@ func (g *Gophkeeper) Register(ctx context.Context, credential gophkeeper.Credent
 	if marshalError != nil {
 		return marshalError
 	}
-	var request, requestError = http.NewRequestWithContext(
+	request, requestError := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost, endpoint,
 		bytes.NewReader(content),
@@ -62,8 +62,8 @@ func (g *Gophkeeper) Register(ctx context.Context, credential gophkeeper.Credent
 
 // Authenticate implements Gophkeeper.
 func (g *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Credential) (gophkeeper.Token, error) {
-	var endpoint = fmt.Sprintf("%s/login", g.Server)
-	var content, marshalError = json.Marshal(
+	endpoint := fmt.Sprintf("%s/login", g.Server)
+	content, marshalError := json.Marshal(
 		map[string]any{
 			"username": credential.Username,
 			"password": credential.Password,
@@ -72,7 +72,7 @@ func (g *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Cre
 	if marshalError != nil {
 		return (gophkeeper.Token)(""), marshalError
 	}
-	var request, requestError = http.NewRequestWithContext(
+	request, requestError := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost, endpoint,
 		bytes.NewReader(content),
@@ -80,7 +80,7 @@ func (g *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Cre
 	if requestError != nil {
 		return (gophkeeper.Token)(""), requestError
 	}
-	var response, postError = g.Client.Do(request)
+	response, postError := g.Client.Do(request)
 	if postError != nil {
 		return (gophkeeper.Token)(""), postError
 	}
@@ -89,7 +89,7 @@ func (g *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Cre
 	case http.StatusUnauthorized:
 		return (gophkeeper.Token)(""), gophkeeper.ErrBadCredential
 	case http.StatusOK:
-		var token = response.Header.Get("Authorization")
+		token := response.Header.Get("Authorization")
 		return (gophkeeper.Token)(token), nil
 	default:
 		return (gophkeeper.Token)(""), errors.Join(
@@ -101,7 +101,7 @@ func (g *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Cre
 
 // Identity implements Gophkeeper.
 func (g *Gophkeeper) Identity(_ context.Context, token gophkeeper.Token) (gophkeeper.Identity, error) {
-	var identity = &Identity{
+	identity := &Identity{
 		Client: g.Client,
 		Server: g.Server,
 		Token:  token,

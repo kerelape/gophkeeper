@@ -32,26 +32,26 @@ func (r *restoreFileCommand) Execute(ctx context.Context, args stack.Stack[strin
 		return false, errors.New("expected 2 arguments")
 	}
 
-	var rid, ridError = strconv.Atoi(args.Pop())
+	rid, ridError := strconv.Atoi(args.Pop())
 	if ridError != nil {
 		return false, ridError
 	}
-	var path = args.Pop()
+	path := args.Pop()
 
-	var gophkeeperIdentity, gophkeeperIdentityError = authenticate(ctx, r.gophkeeper)
+	gophkeeperIdentity, gophkeeperIdentityError := authenticate(ctx, r.gophkeeper)
 	if gophkeeperIdentityError != nil {
 		return true, gophkeeperIdentityError
 	}
 
-	var vaultPassword, vaultPasswordError = vaultPassword(ctx)
+	vaultPassword, vaultPasswordError := vaultPassword(ctx)
 	if vaultPasswordError != nil {
 		return true, vaultPasswordError
 	}
 
-	var identity = identity{
+	identity := identity{
 		origin: gophkeeperIdentity,
 	}
-	var resource, resourceError = identity.RestoreFile(ctx, (gophkeeper.ResourceID)(rid), path, vaultPassword)
+	resource, resourceError := identity.RestoreFile(ctx, (gophkeeper.ResourceID)(rid), path, vaultPassword)
 	if resourceError != nil {
 		return true, resourceError
 	}

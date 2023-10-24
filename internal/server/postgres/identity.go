@@ -33,7 +33,7 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 		return -1, errors.Join(err, gophkeeper.ErrBadCredential)
 	}
 
-	var transaction, transactionError = i.Connection.Begin(ctx)
+	transaction, transactionError := i.Connection.Begin(ctx)
 	if transactionError != nil {
 		return -1, transactionError
 	}
@@ -78,7 +78,7 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 		meta    string
 		content []byte
 	)
-	var queryResourceResult = i.Connection.QueryRow(
+	queryResourceResult := i.Connection.QueryRow(
 		ctx,
 		`SELECT meta, resource FROM resources WHERE id = $1 AND owner = $2 AND type = $3`,
 		(int64)(rid), i.Username, (int)(gophkeeper.ResourceTypePiece),
@@ -90,7 +90,7 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 		}
 		return gophkeeper.Piece{}, err
 	}
-	var queryPieceResult = i.Connection.QueryRow(
+	queryPieceResult := i.Connection.QueryRow(
 		ctx,
 		`SELECT content FROM pieces WHERE id = $1`,
 		id,
@@ -99,7 +99,7 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 		return gophkeeper.Piece{}, err
 	}
 
-	var piece = gophkeeper.Piece{
+	piece := gophkeeper.Piece{
 		Meta:    meta,
 		Content: content,
 	}
@@ -113,8 +113,8 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 		return -1, errors.Join(err, gophkeeper.ErrBadCredential)
 	}
 
-	var location = path.Join(i.BlobsDir, uuid.New().String())
-	var file, createError = os.Create(location)
+	location := path.Join(i.BlobsDir, uuid.New().String())
+	file, createError := os.Create(location)
 	if createError != nil {
 		return -1, createError
 	}
@@ -134,7 +134,7 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 		return -1, err
 	}
 
-	var transaction, transactionError = i.Connection.Begin(ctx)
+	transaction, transactionError := i.Connection.Begin(ctx)
 	if transactionError != nil {
 		return -1, transactionError
 	}
@@ -144,7 +144,7 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 		rid    int64
 	)
 
-	var insertBlobResult = transaction.QueryRow(
+	insertBlobResult := transaction.QueryRow(
 		ctx,
 		`INSERT INTO blobs(location) VALUES($1) RETURNING id`,
 		location,
@@ -156,7 +156,7 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 		return -1, err
 	}
 
-	var insertResourceResult = transaction.QueryRow(
+	insertResourceResult := transaction.QueryRow(
 		ctx,
 		`INSERT INTO resources(meta, owner, type, resource) VALUES($1, $2, $3, $4) RETURNING id`,
 		blob.Meta, i.Username, gophkeeper.ResourceTypeBlob, blobID,
@@ -184,7 +184,7 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 		return gophkeeper.Blob{}, errors.Join(err, gophkeeper.ErrBadCredential)
 	}
 
-	var selectResourceResult = i.Connection.QueryRow(
+	selectResourceResult := i.Connection.QueryRow(
 		ctx,
 		`SELECT meta, resource FROM resources WHERE id = $1 AND owner = $2`,
 		(int64)(rid), i.Username,
@@ -198,7 +198,7 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 	}
 
 	var location string
-	var selectBlobResult = i.Connection.QueryRow(
+	selectBlobResult := i.Connection.QueryRow(
 		ctx,
 		`SELECT location FROM blobs WHERE id = $1`,
 		blobID,
@@ -207,12 +207,12 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 		return gophkeeper.Blob{}, err
 	}
 
-	var file, fileError = os.Open(location)
+	file, fileError := os.Open(location)
 	if fileError != nil {
 		return gophkeeper.Blob{}, fileError
 	}
 
-	var blob = gophkeeper.Blob{
+	blob := gophkeeper.Blob{
 		Meta:    meta,
 		Content: file,
 	}
@@ -221,12 +221,12 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 
 // Delete implements Identity.
 func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error {
-	var transaction, transactionError = i.Connection.Begin(ctx)
+	transaction, transactionError := i.Connection.Begin(ctx)
 	if transactionError != nil {
 		return transactionError
 	}
 
-	var deleteResourceResult = transaction.QueryRow(
+	deleteResourceResult := transaction.QueryRow(
 		ctx,
 		`DELETE FROM resources WHERE id = $1 AND owner = $2 RETURNING type, resource`,
 		(int64)(rid), i.Username,
@@ -259,7 +259,7 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 			return err
 		}
 	case gophkeeper.ResourceTypeBlob:
-		var deleteResult = transaction.QueryRow(
+		deleteResult := transaction.QueryRow(
 			ctx,
 			`DELETE FROM blobs WHERE id = $1 RETURNING location`,
 			resourceID,
@@ -292,7 +292,7 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 
 // List implements Identity.
 func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
-	var selectResourcesResult, selectResourcesResultError = i.Connection.Query(
+	selectResourcesResult, selectResourcesResultError := i.Connection.Query(
 		ctx,
 		`SELECT id, type, meta FROM resources WHERE owner = $1`,
 		i.Username,
@@ -316,7 +316,7 @@ func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 }
 
 func (i *Identity) comparePassword(ctx context.Context, password string) error {
-	var row = i.Connection.QueryRow(
+	row := i.Connection.QueryRow(
 		ctx,
 		`SELECT password FROM identities WHERE username = $1`,
 		i.Username,
@@ -330,7 +330,7 @@ func (i *Identity) comparePassword(ctx context.Context, password string) error {
 		return err
 	}
 
-	var decodedPassword, decodePasswordError = i.PasswordEncoding.DecodeString(encodedPassword)
+	decodedPassword, decodePasswordError := i.PasswordEncoding.DecodeString(encodedPassword)
 	if decodePasswordError != nil {
 		return decodePasswordError
 	}

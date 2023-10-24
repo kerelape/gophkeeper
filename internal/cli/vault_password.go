@@ -10,7 +10,7 @@ import (
 )
 
 func vaultPassword(ctx context.Context) (string, error) {
-	var m, err = tea.NewProgram(
+	m, err := tea.NewProgram(
 		newVaultPasswordModel(),
 		tea.WithAltScreen(),
 		tea.WithContext(ctx),
@@ -36,7 +36,7 @@ type vaultPasswordModel struct {
 }
 
 func newVaultPasswordModel() vaultPasswordModel {
-	var m = vaultPasswordModel{
+	m := vaultPasswordModel{
 		password: textinput.New(),
 	}
 	m.password.EchoMode = textinput.EchoPassword

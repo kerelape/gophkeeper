@@ -21,7 +21,7 @@ type cardInfo struct {
 }
 
 func cardCredential(ctx context.Context) (cardInfo, error) {
-	var m, err = tea.NewProgram(
+	m, err := tea.NewProgram(
 		newCardCredentialModel(),
 		tea.WithAltScreen(),
 		tea.WithContext(ctx),
@@ -33,7 +33,7 @@ func cardCredential(ctx context.Context) (cardInfo, error) {
 	if !ok {
 		panic("unexpected model type")
 	}
-	var info = cardInfo{
+	info := cardInfo{
 		ccn:    model.ccn.Value(),
 		exp:    model.exp.Value(),
 		cvv:    model.cvv.Value(),
@@ -54,7 +54,7 @@ type cardCredentialModel struct {
 }
 
 func newCardCredentialModel() cardCredentialModel {
-	var m = cardCredentialModel{
+	m := cardCredentialModel{
 		ccn:    textinput.New(),
 		exp:    textinput.New(),
 		cvv:    textinput.New(),
@@ -164,7 +164,7 @@ func (m cardCredentialModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View implements tea.Model.
 func (m cardCredentialModel) View() string {
-	var hintStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#002288"))
+	hintStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#002288"))
 	return form(
 		m.width, m.height,
 		"Card",

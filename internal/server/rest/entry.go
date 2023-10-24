@@ -28,7 +28,7 @@ func (e *Entry) Route() http.Handler {
 			Gophkeeper: e.Gophkeeper,
 		}
 	)
-	var router = chi.NewRouter()
+	router := chi.NewRouter()
 	router.Mount("/register", register.Route())
 	router.Mount("/login", login.Route())
 	router.Mount("/vault", vault.Route())

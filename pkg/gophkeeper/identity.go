@@ -20,11 +20,9 @@ type (
 	}
 )
 
-var (
-	// ErrResourceNotFound is returned when there is no
-	// resource with the ResourceID (or it's owned by another identity).
-	ErrResourceNotFound = errors.New("resource not found")
-)
+// ErrResourceNotFound is returned when there is no
+// resource with the ResourceID (or it's owned by another identity).
+var ErrResourceNotFound = errors.New("resource not found")
 
 // Identity is a gophkeeper's identity.
 type Identity interface {

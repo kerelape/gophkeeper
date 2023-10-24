@@ -24,25 +24,25 @@ func TestIdentity(t *testing.T) {
 			Password: "nonword",
 		}
 	)
-	var registerError = g.Register(context.Background(), credential)
+	registerError := g.Register(context.Background(), credential)
 	assert.Nil(t, registerError, "expected to successfully register")
 
-	var registerAlianError = g.Register(context.Background(), alianCredential)
+	registerAlianError := g.Register(context.Background(), alianCredential)
 	assert.Nil(t, registerAlianError, "expected to successfully register")
 
-	var token, authenticateError = g.Authenticate(context.Background(), credential)
+	token, authenticateError := g.Authenticate(context.Background(), credential)
 	assert.Nil(t, authenticateError, "expected to successfully authenticate")
 
-	var alianToken, authenticateAlianError = g.Authenticate(context.Background(), alianCredential)
+	alianToken, authenticateAlianError := g.Authenticate(context.Background(), alianCredential)
 	assert.Nil(t, authenticateAlianError, "expected to successfully authenticate")
 
-	var identity, identityError = g.Identity(context.Background(), token)
+	identity, identityError := g.Identity(context.Background(), token)
 	assert.Nil(t, identityError, "expected to successfully get the identity")
 
-	var alian, alianError = g.Identity(context.Background(), alianToken)
+	alian, alianError := g.Identity(context.Background(), alianToken)
 	assert.Nil(t, alianError, "expected to successfully get the identity")
 
-	var rid, storeError = identity.StorePiece(
+	rid, storeError := identity.StorePiece(
 		context.Background(),
 		gophkeeper.Piece{
 			Meta:    "testmeta",
@@ -51,7 +51,7 @@ func TestIdentity(t *testing.T) {
 		credential.Password,
 	)
 	assert.Nil(t, storeError, "expected to successfully store a piece")
-	var piece, restoreError = identity.RestorePiece(
+	piece, restoreError := identity.RestorePiece(
 		context.Background(),
 		rid, credential.Password,
 	)
@@ -59,7 +59,7 @@ func TestIdentity(t *testing.T) {
 	assert.Equal(t, "testmeta", piece.Meta, "meta is not restored correctly")
 	assert.Equal(t, "testcontent", (string)(piece.Content), "content is not restored correctly")
 
-	var _, alianRestoreError = alian.RestorePiece(
+	_, alianRestoreError := alian.RestorePiece(
 		context.Background(),
 		rid, alianCredential.Password,
 	)
@@ -71,7 +71,7 @@ func TestIdentity(t *testing.T) {
 		"unexpected error on restoring other identity's piece",
 	)
 
-	var blobRID, storeBlobError = identity.StoreBlob(
+	blobRID, storeBlobError := identity.StoreBlob(
 		context.Background(),
 		gophkeeper.Blob{
 			Meta:    "testmeta",
@@ -81,7 +81,7 @@ func TestIdentity(t *testing.T) {
 	)
 	assert.Nil(t, storeBlobError, "expected to successfully store a blob")
 
-	var blob, restoreBlobError = identity.RestoreBlob(
+	blob, restoreBlobError := identity.RestoreBlob(
 		context.Background(),
 		blobRID, credential.Password,
 	)
@@ -91,7 +91,7 @@ func TestIdentity(t *testing.T) {
 		t,
 		"testcontent",
 		func() string {
-			var content, err = io.ReadAll(blob.Content)
+			content, err := io.ReadAll(blob.Content)
 			assert.Nil(t, err, "expected to successfully read content")
 			return (string)(content)
 		}(),
@@ -99,38 +99,38 @@ func TestIdentity(t *testing.T) {
 	)
 	assert.Nil(t, blob.Content.Close(), "failed to close blob content")
 
-	var _, restoreAlianBlob = alian.RestoreBlob(
+	_, restoreAlianBlob := alian.RestoreBlob(
 		context.Background(),
 		blobRID, alianCredential.Password,
 	)
 	assert.NotNil(t, restoreAlianBlob, "expected to get an error on restoring alian blob")
 	assert.ErrorIs(t, restoreAlianBlob, gophkeeper.ErrResourceNotFound, "unexpected error")
 
-	var deleteError = identity.Delete(context.Background(), rid)
+	deleteError := identity.Delete(context.Background(), rid)
 	assert.Nil(t, deleteError, "did not expect an error")
 
-	var alianDeleteError = alian.Delete(context.Background(), blobRID)
+	alianDeleteError := alian.Delete(context.Background(), blobRID)
 	assert.NotNil(t, alianDeleteError, "expected an error")
 	assert.ErrorIs(t, alianDeleteError, gophkeeper.ErrResourceNotFound, "unexpected error")
 
-	var resources, listError = identity.List(context.Background())
+	resources, listError := identity.List(context.Background())
 	assert.Nil(t, listError, "did not expect an error")
 	assert.Equal(t, 1, len(resources), "expected resources list to be equal to 2")
 
 	t.Run("Invalid RID", func(t *testing.T) {
 		const RID = -1
 		t.Run("Restore piece", func(t *testing.T) {
-			var _, err = identity.RestorePiece(context.Background(), RID, credential.Password)
+			_, err := identity.RestorePiece(context.Background(), RID, credential.Password)
 			assert.NotNil(t, err, "expected to get an error")
 			assert.ErrorIs(t, err, gophkeeper.ErrResourceNotFound, "unexpected error")
 		})
 		t.Run("Restore blob", func(t *testing.T) {
-			var _, err = identity.RestoreBlob(context.Background(), RID, credential.Password)
+			_, err := identity.RestoreBlob(context.Background(), RID, credential.Password)
 			assert.NotNil(t, err, "expected to get an error")
 			assert.ErrorIs(t, err, gophkeeper.ErrResourceNotFound, "unexpected error")
 		})
 		t.Run("Delete", func(t *testing.T) {
-			var err = identity.Delete(context.Background(), RID)
+			err := identity.Delete(context.Background(), RID)
 			assert.NotNil(t, err, "expected to get an error")
 			assert.ErrorIs(t, err, gophkeeper.ErrResourceNotFound, "unexpected error")
 		})

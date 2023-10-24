@@ -21,11 +21,11 @@ func (g Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Cred
 
 // Identity implements gophkeeper.Gophkeeper.
 func (g Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (gophkeeper.Identity, error) {
-	var origin, originError = g.Origin.Identity(ctx, token)
+	origin, originError := g.Origin.Identity(ctx, token)
 	if originError != nil {
 		return nil, originError
 	}
-	var identity = Identity{
+	identity := Identity{
 		Origin: origin,
 		Cipher: g.Cipher,
 	}

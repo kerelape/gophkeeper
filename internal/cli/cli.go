@@ -22,7 +22,7 @@ var _ runnable.Runnable = (*CLI)(nil)
 
 // Run implements runnable.Runnable.
 func (c *CLI) Run(ctx context.Context) error {
-	var commands = map[string]command{
+	commands := map[string]command{
 		"register": &registerCommand{
 			gophkeeper: c.Gophkeeper,
 		},

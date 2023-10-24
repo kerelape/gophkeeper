@@ -17,16 +17,16 @@ import (
 )
 
 func TestEntry(t *testing.T) {
-	var r = rest.Entry{
+	r := rest.Entry{
 		Gophkeeper: virtual.New(time.Hour, t.TempDir()),
 	}
-	var handler = r.Route()
+	handler := r.Route()
 	assert.NotNil(t, handler, "unexpected nil")
 
 	var token string
 
 	t.Run("register", func(t *testing.T) {
-		var register = func() *http.Response {
+		register := func() *http.Response {
 			var (
 				recorder = httptest.NewRecorder()
 				request  = httptest.NewRequest(
@@ -39,11 +39,11 @@ func TestEntry(t *testing.T) {
 			return recorder.Result()
 		}
 		t.Run("New identity", func(t *testing.T) {
-			var response = register()
+			response := register()
 			assert.Equal(t, http.StatusCreated, response.StatusCode)
 		})
 		t.Run("Duplicate identity", func(t *testing.T) {
-			var response = register()
+			response := register()
 			assert.Equal(t, http.StatusConflict, response.StatusCode)
 		})
 		t.Run("Non-JSON body", func(t *testing.T) {
@@ -56,7 +56,7 @@ func TestEntry(t *testing.T) {
 				)
 			)
 			handler.ServeHTTP(recorder, request)
-			var response = recorder.Result()
+			response := recorder.Result()
 			assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
 		})
 		t.Run("Without password", func(t *testing.T) {
@@ -69,7 +69,7 @@ func TestEntry(t *testing.T) {
 				)
 			)
 			handler.ServeHTTP(recorder, request)
-			var response = recorder.Result()
+			response := recorder.Result()
 			assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
 		})
 		t.Run("Without username", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestEntry(t *testing.T) {
 				)
 			)
 			handler.ServeHTTP(recorder, request)
-			var response = recorder.Result()
+			response := recorder.Result()
 			assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
 		})
 	})
@@ -98,7 +98,7 @@ func TestEntry(t *testing.T) {
 					)
 				)
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusBadRequest, response.StatusCode, "expected to successfully login")
 			})
 			t.Run("Invalid body", func(t *testing.T) {
@@ -111,7 +111,7 @@ func TestEntry(t *testing.T) {
 					)
 				)
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusBadRequest, response.StatusCode, "expected to successfully login")
 			})
 			var (
@@ -123,7 +123,7 @@ func TestEntry(t *testing.T) {
 				)
 			)
 			handler.ServeHTTP(recorder, request)
-			var response = recorder.Result()
+			response := recorder.Result()
 
 			assert.Equal(t, http.StatusOK, response.StatusCode, "expected to successfully login")
 			assert.NotEmpty(t, response.Header.Get("Authorization"), "missing token")
@@ -139,7 +139,7 @@ func TestEntry(t *testing.T) {
 				)
 			)
 			handler.ServeHTTP(recorder, request)
-			var response = recorder.Result()
+			response := recorder.Result()
 
 			assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "expected NOT to login")
 		})
@@ -160,7 +160,7 @@ func TestEntry(t *testing.T) {
 					request.Header.Set("Authorization", token)
 					request.Header.Set("X-Password", "qwerty")
 					handler.ServeHTTP(recorder, request)
-					var response = recorder.Result()
+					response := recorder.Result()
 					assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
 				})
 				var (
@@ -179,13 +179,13 @@ func TestEntry(t *testing.T) {
 				request.Header.Set("Authorization", token)
 				request.Header.Set("X-Password", "qwerty")
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusCreated, response.StatusCode, "unexpected status code")
 
 				var responseBody struct {
 					RID int `json:"rid"`
 				}
-				var decodeError = json.NewDecoder(response.Body).Decode(&responseBody)
+				decodeError := json.NewDecoder(response.Body).Decode(&responseBody)
 				assert.Nil(t, decodeError, "did not expect an error")
 				rid = responseBody.RID
 			})
@@ -201,17 +201,17 @@ func TestEntry(t *testing.T) {
 				request.Header.Set("Authorization", token)
 				request.Header.Set("X-Password", "qwerty")
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusOK, response.StatusCode, "unexpected status code")
 
 				var responseBody struct {
 					Meta    string `json:"meta"`
 					Content string `json:"content"`
 				}
-				var decodeError = json.NewDecoder(response.Body).Decode(&responseBody)
+				decodeError := json.NewDecoder(response.Body).Decode(&responseBody)
 				assert.Nil(t, decodeError, "did not expect an error")
 
-				var content, contentError = base64.RawStdEncoding.DecodeString(responseBody.Content)
+				content, contentError := base64.RawStdEncoding.DecodeString(responseBody.Content)
 				assert.Nil(t, contentError, "did not expect and error")
 
 				assert.Equal(t, "testmeta", responseBody.Meta, "meta is not correct")
@@ -232,7 +232,7 @@ func TestEntry(t *testing.T) {
 						)
 					)
 					handler.ServeHTTP(recorder, request)
-					var response = recorder.Result()
+					response := recorder.Result()
 					assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
 				})
 				t.Run("Without password", func(t *testing.T) {
@@ -246,7 +246,7 @@ func TestEntry(t *testing.T) {
 					)
 					request.Header.Set("X-Password", "qwerty")
 					handler.ServeHTTP(recorder, request)
-					var response = recorder.Result()
+					response := recorder.Result()
 					assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
 				})
 				var (
@@ -261,12 +261,12 @@ func TestEntry(t *testing.T) {
 				request.Header.Set("X-Password", "qwerty")
 				request.Header.Set("X-Meta", "testmeta")
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusCreated, response.StatusCode, "unexpected status code")
 				var responseBody struct {
 					RID int `json:"rid"`
 				}
-				var decodeError = json.NewDecoder(response.Body).Decode(&responseBody)
+				decodeError := json.NewDecoder(response.Body).Decode(&responseBody)
 				assert.Nil(t, decodeError, "did not expect an error")
 				rid = responseBody.RID
 			})
@@ -281,7 +281,7 @@ func TestEntry(t *testing.T) {
 						)
 					)
 					handler.ServeHTTP(recorder, request)
-					var response = recorder.Result()
+					response := recorder.Result()
 					assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
 				})
 				t.Run("Without password", func(t *testing.T) {
@@ -295,7 +295,7 @@ func TestEntry(t *testing.T) {
 					)
 					request.Header.Set("Authorization", token)
 					handler.ServeHTTP(recorder, request)
-					var response = recorder.Result()
+					response := recorder.Result()
 					assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
 				})
 				t.Run("Invalid RID", func(t *testing.T) {
@@ -306,7 +306,7 @@ func TestEntry(t *testing.T) {
 					request.Header.Set("Authorization", token)
 					request.Header.Set("X-Password", "qwerty")
 					handler.ServeHTTP(recorder, request)
-					var response = recorder.Result()
+					response := recorder.Result()
 					assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
 				})
 				var (
@@ -320,12 +320,12 @@ func TestEntry(t *testing.T) {
 				request.Header.Set("Authorization", token)
 				request.Header.Set("X-Password", "qwerty")
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusOK, response.StatusCode, "unexpected status code")
 
 				assert.Equal(t, "testmeta", response.Header.Get("X-Meta"), "meta is not correct")
 
-				var content, contentError = io.ReadAll(response.Body)
+				content, contentError := io.ReadAll(response.Body)
 				assert.Nil(t, contentError, "unexpected error")
 				assert.Equal(t, "Hello, World!", (string)(content), "content is not correct")
 			})
@@ -338,7 +338,7 @@ func TestEntry(t *testing.T) {
 			)
 			request.Header.Set("Authorization", token)
 			handler.ServeHTTP(recorder, request)
-			var response = recorder.Result()
+			response := recorder.Result()
 			assert.Equal(t, http.StatusOK, response.StatusCode, "unexpected status code")
 			t.Run("Without token", func(t *testing.T) {
 				var (
@@ -346,7 +346,7 @@ func TestEntry(t *testing.T) {
 					request  = httptest.NewRequest(http.MethodGet, "/vault", nil)
 				)
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
 			})
 		})
@@ -358,7 +358,7 @@ func TestEntry(t *testing.T) {
 			)
 			request.Header.Set("Authorization", token)
 			handler.ServeHTTP(recorder, request)
-			var response = recorder.Result()
+			response := recorder.Result()
 			assert.Equal(t, http.StatusOK, response.StatusCode, "unexpected status code")
 			t.Run("Without token", func(t *testing.T) {
 				var (
@@ -366,7 +366,7 @@ func TestEntry(t *testing.T) {
 					request  = httptest.NewRequest(http.MethodDelete, "/vault/0", nil)
 				)
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusUnauthorized, response.StatusCode, "unexpected status code")
 			})
 			t.Run("Invalid RID", func(t *testing.T) {
@@ -376,7 +376,7 @@ func TestEntry(t *testing.T) {
 				)
 				request.Header.Set("Authorization", token)
 				handler.ServeHTTP(recorder, request)
-				var response = recorder.Result()
+				response := recorder.Result()
 				assert.Equal(t, http.StatusBadRequest, response.StatusCode, "unexpected status code")
 			})
 		})

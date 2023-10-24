@@ -31,22 +31,22 @@ func (s *storeCardCommand) Execute(ctx context.Context, args stack.Stack[string]
 		return false, errors.New("expected 0 arguments")
 	}
 
-	var gophkeeperIdentity, gophkeeperIdentityError = authenticate(ctx, s.gophkeeper)
+	gophkeeperIdentity, gophkeeperIdentityError := authenticate(ctx, s.gophkeeper)
 	if gophkeeperIdentityError != nil {
 		return true, gophkeeperIdentityError
 	}
 
-	var vaultPassword, vaultPasswordError = vaultPassword(ctx)
+	vaultPassword, vaultPasswordError := vaultPassword(ctx)
 	if vaultPasswordError != nil {
 		return true, vaultPasswordError
 	}
 
-	var description, descriptionError = description(ctx)
+	description, descriptionError := description(ctx)
 	if descriptionError != nil {
 		return true, descriptionError
 	}
 
-	var card, cardError = cardCredential(ctx)
+	card, cardError := cardCredential(ctx)
 	if cardError != nil {
 		return true, cardError
 	}
@@ -60,7 +60,7 @@ func (s *storeCardCommand) Execute(ctx context.Context, args stack.Stack[string]
 			description: description,
 		}
 	)
-	var rid, ridError = identity.StoreCard(ctx, resource, vaultPassword)
+	rid, ridError := identity.StoreCard(ctx, resource, vaultPassword)
 	if ridError != nil {
 		return true, ridError
 	}

@@ -25,26 +25,26 @@ func (s *storeCredentialCommand) Execute(ctx context.Context, args stack.Stack[s
 	if len(args) > 0 {
 		return false, errors.New("expected 0 arguments")
 	}
-	var gophkeeperIdentity, authenticateError = authenticate(ctx, s.gophkeeper)
+	gophkeeperIdentity, authenticateError := authenticate(ctx, s.gophkeeper)
 	if authenticateError != nil {
 		return true, authenticateError
 	}
-	var description, descriptionError = description(ctx)
+	description, descriptionError := description(ctx)
 	if descriptionError != nil {
 		return true, descriptionError
 	}
-	var vaultPassword, vaultPasswordError = vaultPassword(ctx)
+	vaultPassword, vaultPasswordError := vaultPassword(ctx)
 	if vaultPasswordError != nil {
 		return true, vaultPasswordError
 	}
-	var identity = identity{
+	identity := identity{
 		origin: gophkeeperIdentity,
 	}
-	var username, password, credentialError = credential(ctx)
+	username, password, credentialError := credential(ctx)
 	if credentialError != nil {
 		return true, credentialError
 	}
-	var resource = credentialResource{
+	resource := credentialResource{
 		description: description,
 		username:    username,
 		password:    password,

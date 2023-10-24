@@ -27,7 +27,7 @@ func (e *Entry) Route() http.Handler {
 		piece = piece.Entry{}
 		blob  = blob.Entry{}
 	)
-	var router = chi.NewRouter()
+	router := chi.NewRouter()
 	router.Use(authentication.Middleware(e.Gophkeeper))
 	router.Mount("/piece", piece.Route())
 	router.Mount("/blob", blob.Route())
@@ -37,16 +37,16 @@ func (e *Entry) Route() http.Handler {
 }
 
 func (e *Entry) get(out http.ResponseWriter, in *http.Request) {
-	var identity = authentication.Identity(in)
+	identity := authentication.Identity(in)
 
-	var resources, resourcesError = identity.List(in.Context())
+	resources, resourcesError := identity.List(in.Context())
 	if resourcesError != nil {
-		var status = http.StatusInternalServerError
+		status := http.StatusInternalServerError
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
 
-	var response = make([](map[string]any), 0, len(resources))
+	response := make([](map[string]any), 0, len(resources))
 	for _, resource := range resources {
 		response = append(
 			response,
@@ -65,10 +65,10 @@ func (e *Entry) get(out http.ResponseWriter, in *http.Request) {
 }
 
 func (e *Entry) delete(out http.ResponseWriter, in *http.Request) {
-	var token = in.Header.Get("Authorization")
-	var identity, identityError = e.Gophkeeper.Identity(in.Context(), (gophkeeper.Token)(token))
+	token := in.Header.Get("Authorization")
+	identity, identityError := e.Gophkeeper.Identity(in.Context(), (gophkeeper.Token)(token))
 	if identityError != nil {
-		var status = http.StatusInternalServerError
+		status := http.StatusInternalServerError
 		if errors.Is(identityError, gophkeeper.ErrBadCredential) {
 			status = http.StatusUnauthorized
 		}
@@ -76,15 +76,15 @@ func (e *Entry) delete(out http.ResponseWriter, in *http.Request) {
 		return
 	}
 
-	var rid, ridError = strconv.Atoi(chi.URLParam(in, "rid"))
+	rid, ridError := strconv.Atoi(chi.URLParam(in, "rid"))
 	if ridError != nil {
-		var status = http.StatusBadRequest
+		status := http.StatusBadRequest
 		http.Error(out, http.StatusText(status), status)
 		return
 	}
 
 	if err := identity.Delete(in.Context(), (gophkeeper.ResourceID)(rid)); err != nil {
-		var status = http.StatusInternalServerError
+		status := http.StatusInternalServerError
 		if errors.Is(err, gophkeeper.ErrResourceNotFound) {
 			status = http.StatusNotFound
 		}
