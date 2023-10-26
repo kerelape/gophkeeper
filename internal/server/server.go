@@ -51,7 +51,7 @@ func (s *Server) Run(ctx context.Context) error {
 				Cipher: encrypted.CFBCipher{},
 			},
 			UseTLS:        s.RestUseTLS,
-			HostWhilelist: s.RestHostWhilelist,
+			HostWhilelist: s.RestHostWhitelist,
 		}
 	)
 
