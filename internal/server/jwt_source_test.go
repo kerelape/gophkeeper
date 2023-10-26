@@ -9,7 +9,7 @@ import (
 )
 
 func TestJWTSource(t *testing.T) {
-	jp := NewJWTSource(([]byte)("secret"), time.Hour)
+	jp := NewJWTSource(([]byte)("secret"), time.Second)
 
 	token, tokenError := jp.Create(context.Background(), "test")
 	assert.Nil(t, tokenError, "did not expect an error")
@@ -21,15 +21,7 @@ func TestJWTSource(t *testing.T) {
 	_, invalidError := jp.Unwrap(context.Background(), "")
 	assert.NotNil(t, invalidError)
 
-	t.Run("Expiration", func(t *testing.T) {
-		jp := NewJWTSource(([]byte)("secret"), time.Second)
-
-		token, tokenError := jp.Create(context.Background(), "test")
-		assert.Nil(t, tokenError, "did not expect an error")
-
-		time.Sleep(time.Second * 5)
-
-		_, err := jp.Unwrap(context.Background(), token)
-		assert.NotNil(t, err, "expected to get an error")
-	})
+	time.Sleep(time.Second * 5)
+	_, err := jp.Unwrap(context.Background(), token)
+	assert.NotNil(t, err, "expected to get an error")
 }
