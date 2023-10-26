@@ -28,7 +28,7 @@ func main() {
 	gophkeeper := server.Server{
 		RestAddress:       configuration.Rest.Address,
 		RestUseTLS:        configuration.Rest.UseTLS,
-		RestHostWhilelist: configuration.Rest.HostWhilelist,
+		RestHostWhitelist: configuration.Rest.HostWhilelist,
 
 		DatabaseDSN: configuration.DatabaseDSN,
 		BlobsDir:    path.Join(wd, "blobs"),
