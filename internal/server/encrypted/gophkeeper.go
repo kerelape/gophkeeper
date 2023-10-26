@@ -22,14 +22,11 @@ func (g Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Cred
 // Identity implements gophkeeper.Gophkeeper.
 func (g Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (gophkeeper.Identity, error) {
 	origin, originError := g.Origin.Identity(ctx, token)
-	if originError != nil {
-		return nil, originError
-	}
 	identity := Identity{
 		Origin: origin,
 		Cipher: g.Cipher,
 	}
-	return identity, nil
+	return identity, originError
 }
 
 // Register implements gophkeeper.Gophkeeper.
