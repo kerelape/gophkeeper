@@ -60,18 +60,12 @@ func (jp *jwtSource) Unwrap(_ context.Context, token gophkeeper.Token) (string, 
 
 	claims := parsedToken.Claims
 
-	exp, expError := claims.GetExpirationTime()
-	if expError != nil {
-		return "", expError
-	}
+	exp, _ := claims.GetExpirationTime()
 	if exp.Before(time.Now()) {
 		return "", errors.New("token expired")
 	}
 
-	sub, subError := claims.GetSubject()
-	if subError != nil {
-		return "", subError
-	}
+	sub, _ := claims.GetSubject()
 
 	return sub, nil
 }
