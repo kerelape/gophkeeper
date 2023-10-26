@@ -21,8 +21,8 @@ type (
 
 var _ UsernameBasedTokenSource = (*jwtSource)(nil)
 
-// NewJWTProvider creates a new JWT provider.
-func NewJWTProvider(secret []byte, lifespan time.Duration) UsernameBasedTokenSource {
+// NewJWTSource creates a new JWT provider.
+func NewJWTSource(secret []byte, lifespan time.Duration) UsernameBasedTokenSource {
 	return &jwtSource{
 		secret:   secret,
 		lifespan: lifespan,

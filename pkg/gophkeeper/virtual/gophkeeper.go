@@ -2,11 +2,10 @@ package virtual
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"sync"
 	"time"
 
+	"github.com/kerelape/gophkeeper/internal/server"
 	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
 )
 
@@ -20,10 +19,9 @@ type identity struct {
 // Gophkeeper is a virtual Gophkeeper.
 type Gophkeeper struct {
 	identities []identity
-	sessions   map[gophkeeper.Token]int
 
-	sessionLifespan time.Duration
-	blobsDir        string
+	ts       server.UsernameBasedTokenSource
+	blobsDir string
 
 	storage *storage
 
@@ -34,10 +32,9 @@ type Gophkeeper struct {
 // data in RAM.
 func New(sessionLifespan time.Duration, blobsDir string) *Gophkeeper {
 	return &Gophkeeper{
-		identities:      make([]identity, 0),
-		sessions:        make(map[gophkeeper.Token]int),
-		sessionLifespan: sessionLifespan,
-		blobsDir:        blobsDir,
+		identities: make([]identity, 0),
+		ts:         server.NewJWTSource(([]byte)("none"), sessionLifespan),
+		blobsDir:   blobsDir,
 		storage: &storage{
 			mutex:     &sync.Mutex{},
 			resources: make([]resource, 0),
@@ -69,42 +66,30 @@ func (k *Gophkeeper) Register(_ context.Context, credential gophkeeper.Credentia
 }
 
 // Authenticate implements gophkeeper.Gophkeeper.
-func (k *Gophkeeper) Authenticate(_ context.Context, credential gophkeeper.Credential) (gophkeeper.Token, error) {
+func (k *Gophkeeper) Authenticate(ctx context.Context, credential gophkeeper.Credential) (gophkeeper.Token, error) {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 
 	id := k.findIdentity(credential.Username)
 	if id == invalidIdentityID {
-		return (gophkeeper.Token)(""), gophkeeper.ErrBadCredential
+		return gophkeeper.InvalidToken, gophkeeper.ErrBadCredential
 	}
 
-	sessionBytes := make([]byte, 2048)
-	if _, err := rand.Read(sessionBytes); err != nil {
-		return (gophkeeper.Token)(""), err
-	}
-
-	session := (gophkeeper.Token)(base64.URLEncoding.EncodeToString(sessionBytes))
-	k.sessions[session] = id
-
-	go func(sessions map[gophkeeper.Token]int, session gophkeeper.Token) {
-		time.Sleep(k.sessionLifespan)
-		k.mutex.Lock()
-		delete(k.sessions, session)
-		k.mutex.Unlock()
-	}(k.sessions, session)
-
-	return session, nil
+	return k.ts.Create(ctx, credential.Username)
 }
 
 // Identity implements gophkeeper.Gophkeeper.
-func (k *Gophkeeper) Identity(_ context.Context, token gophkeeper.Token) (gophkeeper.Identity, error) {
+func (k *Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (gophkeeper.Identity, error) {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
-	if _, ok := k.sessions[token]; !ok {
-		return nil, gophkeeper.ErrBadCredential
+
+	username, usernameError := k.ts.Unwrap(ctx, token)
+	if usernameError != nil {
+		return nil, usernameError
 	}
+
 	identity := &Identity{
-		identity: k.identities[k.sessions[token]],
+		identity: k.identities[k.findIdentity(username)],
 		storage:  k.storage,
 		blobsDir: k.blobsDir,
 	}

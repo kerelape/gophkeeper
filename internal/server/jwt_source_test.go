@@ -9,7 +9,7 @@ import (
 )
 
 func TestJWTSource(t *testing.T) {
-	jp := NewJWTProvider(([]byte)("secret"), time.Hour)
+	jp := NewJWTSource(([]byte)("secret"), time.Hour)
 
 	token, tokenError := jp.Create(context.Background(), "test")
 	assert.Nil(t, tokenError, "did not expect an error")
@@ -19,7 +19,7 @@ func TestJWTSource(t *testing.T) {
 	assert.Equal(t, username, "test", "usernames do not match")
 
 	t.Run("Expiration", func(t *testing.T) {
-		jp := NewJWTProvider(([]byte)("secret"), time.Second)
+		jp := NewJWTSource(([]byte)("secret"), time.Second)
 
 		token, tokenError := jp.Create(context.Background(), "test")
 		assert.Nil(t, tokenError, "did not expect an error")

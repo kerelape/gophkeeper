@@ -36,7 +36,7 @@ func main() {
 	var (
 		database = postgres.New(
 			postgres.DSNSource(configuration.DatabaseDSN),
-			server.NewJWTProvider(
+			server.NewJWTSource(
 				secret,
 				configuration.Token.Lifespan,
 			),
