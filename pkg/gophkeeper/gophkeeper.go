@@ -27,6 +27,8 @@ type (
 	}
 )
 
+const InvalidToken Token = ""
+
 // Gophkeeper is gophkeeper.
 type Gophkeeper interface {
 	// Register registers a new identity into gophkeeper.

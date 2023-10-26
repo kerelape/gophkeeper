@@ -12,7 +12,7 @@ type Config struct {
 	Rest struct {
 		Address       string   `env:"ADDRESS" env-default:":16355" env-description:"Address that REST api listens on."`
 		UseTLS        bool     `env:"USE_TLS" env-default:"true" env-description:"Use TLS or not"`
-		HostWhilelist []string `env:"HOST_WHITELIST" env-default:"" env-description:""`
+		HostWhitelist []string `env:"HOST_WHITELIST" env-default:"" env-description:""`
 	} `env-prefix:"REST_"`
 	Token struct {
 		Lifespan time.Duration `env:"LIFESPAN" env-description:"JWT Token lifespan in milliseconds" env-default:"15m"`
