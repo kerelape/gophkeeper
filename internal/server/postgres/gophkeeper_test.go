@@ -15,7 +15,7 @@ func TestWithBlobsWith(t *testing.T) {
 func TestWithPasswordEncoding(t *testing.T) {
 	encoding := *base64.RawURLEncoding
 	g := New(nil, nil, WithPasswordEncoding(&encoding))
-	assert.Equal(t, encoding, g.passwordEncoding, "password encodings do not match")
+	assert.Equal(t, &encoding, g.passwordEncoding, "password encodings do not match")
 
 	t.Run("Panics with nil encoding", func(t *testing.T) {
 		assert.Panics(

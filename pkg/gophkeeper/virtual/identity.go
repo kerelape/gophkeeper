@@ -55,7 +55,7 @@ func (i *Identity) RestorePiece(_ context.Context, rid gophkeeper.ResourceID, pa
 		return gophkeeper.Piece{}, gophkeeper.ErrBadCredential
 	}
 
-	if !((int)(rid) < len(i.storage.resources)) || rid < 0 {
+	if ((int)(rid) >= len(i.storage.resources)) || rid < 0 {
 		return gophkeeper.Piece{}, gophkeeper.ErrResourceNotFound
 	}
 
