@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -140,7 +141,7 @@ func TestIdentity(t *testing.T) {
 		_, storePieceError := identity.StorePiece(context.Background(), gophkeeper.Piece{}, "")
 		assert.NotNil(t, storePieceError)
 
-		_, storeBlobError := identity.StoreBlob(context.Background(), gophkeeper.Blob{}, "")
+		_, storeBlobError := identity.StoreBlob(context.Background(), gophkeeper.Blob{Content: io.NopCloser(strings.NewReader(""))}, "")
 		assert.NotNil(t, storeBlobError)
 
 		_, restorePieceError := identity.RestorePiece(context.Background(), 0, "")
