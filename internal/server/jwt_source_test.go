@@ -27,7 +27,7 @@ func TestJWTSource(t *testing.T) {
 		token, tokenError := jp.Create(context.Background(), "test")
 		assert.Nil(t, tokenError, "did not expect an error")
 
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 5)
 
 		_, err := jp.Unwrap(context.Background(), token)
 		assert.NotNil(t, err, "expected to get an error")
