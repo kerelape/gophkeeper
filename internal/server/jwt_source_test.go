@@ -18,6 +18,9 @@ func TestJWTSource(t *testing.T) {
 	assert.Nil(t, usernameError, "did not expect an error")
 	assert.Equal(t, username, "test", "usernames do not match")
 
+	_, invalidError := jp.Unwrap(context.Background(), "")
+	assert.NotNil(t, invalidError)
+
 	t.Run("Expiration", func(t *testing.T) {
 		jp := NewJWTSource(([]byte)("secret"), time.Second)
 
