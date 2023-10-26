@@ -2,6 +2,7 @@ package virtual
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -85,7 +86,7 @@ func (k *Gophkeeper) Identity(ctx context.Context, token gophkeeper.Token) (goph
 
 	username, usernameError := k.ts.Unwrap(ctx, token)
 	if usernameError != nil {
-		return nil, usernameError
+		return nil, errors.Join(usernameError, gophkeeper.ErrBadCredential)
 	}
 
 	identity := &Identity{
