@@ -135,4 +135,18 @@ func TestIdentity(t *testing.T) {
 			assert.ErrorIs(t, err, gophkeeper.ErrResourceNotFound, "unexpected error")
 		})
 	})
+
+	t.Run("Bad password", func(t *testing.T) {
+		_, storePieceError := identity.StorePiece(context.Background(), gophkeeper.Piece{}, "")
+		assert.NotNil(t, storePieceError)
+
+		_, storeBlobError := identity.StoreBlob(context.Background(), gophkeeper.Blob{}, "")
+		assert.NotNil(t, storeBlobError)
+
+		_, restorePieceError := identity.RestorePiece(context.Background(), 0, "")
+		assert.NotNil(t, restorePieceError)
+
+		_, restoreBlobError := identity.RestoreBlob(context.Background(), 0, "")
+		assert.NotNil(t, restoreBlobError)
+	})
 }
