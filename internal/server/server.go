@@ -16,7 +16,7 @@ import (
 type Server struct {
 	RestAddress       string // the address that REST api serves at.
 	RestUseTLS        bool
-	RestHostWhilelist []string
+	RestHostWhitelist []string
 
 	DatabaseDSN   string
 	BlobsDir      string
