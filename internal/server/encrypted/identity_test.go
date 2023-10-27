@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -172,5 +173,50 @@ func TestEncrypted(t *testing.T) {
 		assert.Equal(t, 1, len(resources))
 		assert.Equal(t, "testmeta", resources[0].Meta)
 		assert.Equal(t, gophkeeper.ResourceTypePiece, resources[0].Type)
+	})
+
+	t.Run("Incorrect input", func(t *testing.T) {
+		var (
+			g = encrypted.Gophkeeper{
+				Origin: virtual.New(time.Hour, t.TempDir()),
+				Cipher: encrypted.CFBCipher{},
+			}
+			credential = gophkeeper.Credential{
+				Username: "test",
+				Password: "qwerty",
+			}
+		)
+
+		registerError := g.Register(context.Background(), credential)
+		assert.Nil(t, registerError, "expected to successfully register")
+
+		token, authenticateError := g.Authenticate(context.Background(), credential)
+		assert.Nil(t, authenticateError, "expected to successfully authenticate")
+
+		identity, identityError := g.Identity(context.Background(), token)
+		assert.Nil(t, identityError, "expected to successfully get the identity")
+
+		_, restoreIncorrectPieceError := identity.RestorePiece(context.Background(), -1, credential.Password)
+		assert.NotNil(t, restoreIncorrectPieceError)
+
+		_, restoreIncorrectBlobError := identity.RestoreBlob(context.Background(), -1, credential.Password)
+		assert.NotNil(t, restoreIncorrectBlobError)
+
+		_, invalidPasswordError := identity.StorePiece(context.Background(), gophkeeper.Piece{}, "")
+		assert.NotNil(t, invalidPasswordError)
+
+		_, invalidPasswordError = identity.StoreBlob(context.Background(), gophkeeper.Blob{Content: io.NopCloser(strings.NewReader(""))}, "")
+		assert.NotNil(t, invalidPasswordError)
+
+		(identity.(encrypted.Identity)).Origin.StorePiece(
+			context.Background(),
+			gophkeeper.Piece{
+				Meta:    "not a json",
+				Content: ([]byte)("test"),
+			},
+			credential.Password,
+		)
+		_, invalidContentError := identity.List(context.Background())
+		assert.NotNil(t, invalidContentError)
 	})
 }
