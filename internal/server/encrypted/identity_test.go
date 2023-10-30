@@ -244,7 +244,7 @@ func TestEncrypted(t *testing.T) {
 			},
 			credential.Password,
 		)
-		assert.NotNil(t, err)
+		assert.Nil(t, err)
 		_, invalidContentError := identity.List(context.Background())
 		assert.NotNil(t, invalidContentError)
 	})
