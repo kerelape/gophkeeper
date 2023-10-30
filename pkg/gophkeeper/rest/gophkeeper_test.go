@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var nilContext context.Context = nil
+
 func GophkeeperExample() {
 	g := rest.Gophkeeper{
 		Client: *http.DefaultClient,       // HTTP client to be used by the object.
@@ -84,6 +86,11 @@ func TestGophkeeper(t *testing.T) {
 			assert.NotNil(t, err, "expected an error")
 			assert.ErrorIs(t, err, gophkeeper.ErrIdentityDuplicate, "unexpected error")
 		})
+
+		t.Run("nil context", func(t *testing.T) {
+			err := g.Register(nilContext, credential)
+			assert.NotNil(t, err)
+		})
 	})
 	t.Run("Authenticate", func(t *testing.T) {
 		_, err := g.Authenticate(context.Background(), credential)
@@ -92,6 +99,11 @@ func TestGophkeeper(t *testing.T) {
 			_, err := g.Authenticate(context.Background(), gophkeeper.Credential{})
 			assert.NotNil(t, err, "expected an error")
 			assert.ErrorIs(t, err, gophkeeper.ErrBadCredential)
+		})
+
+		t.Run("nil context", func(t *testing.T) {
+			_, err := g.Authenticate(nilContext, credential)
+			assert.NotNil(t, err)
 		})
 	})
 }
