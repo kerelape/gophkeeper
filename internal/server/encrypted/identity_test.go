@@ -64,7 +64,9 @@ func TestEncrypted(t *testing.T) {
 			},
 			credential.Password,
 		)
-		assert.Nil(t, wrongRIDError)
+		if wrongRIDError != nil {
+			t.Fail()
+		}
 		_, restoreWrongError := identity.RestorePiece(context.Background(), wrongRID, credential.Password)
 		assert.NotNil(t, restoreWrongError)
 	})
