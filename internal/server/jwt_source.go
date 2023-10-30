@@ -55,17 +55,8 @@ func (jp *jwtSource) Unwrap(_ context.Context, token gophkeeper.Token) (string, 
 		},
 	)
 	if parseTokenError != nil {
-		return "", parseTokenError
+		return "", errors.Join(parseTokenError, gophkeeper.ErrBadCredential)
 	}
 
-	claims := parsedToken.Claims
-
-	exp, _ := claims.GetExpirationTime()
-	if exp.Before(time.Now()) {
-		return "", errors.New("token expired")
-	}
-
-	sub, _ := claims.GetSubject()
-
-	return sub, nil
+	return parsedToken.Claims.GetSubject()
 }
