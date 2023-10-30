@@ -39,11 +39,7 @@ func (jp *jwtSource) Create(_ context.Context, username string) (gophkeeper.Toke
 		},
 	)
 	token, signTokenError := rawToken.SignedString(jp.secret)
-	if signTokenError != nil {
-		return gophkeeper.InvalidToken, signTokenError
-	}
-
-	return (gophkeeper.Token)(token), nil
+	return (gophkeeper.Token)(token), signTokenError
 }
 
 // Unwrap implements Provider.
