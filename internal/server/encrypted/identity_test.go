@@ -54,6 +54,19 @@ func TestEncrypted(t *testing.T) {
 
 		assert.Equal(t, "testmeta", piece.Meta, "meta is not restored correctly")
 		assert.Equal(t, "testcontent", (string)(piece.Content), "content is not restored correctly")
+
+		origin := (identity.(encrypted.Identity)).Origin
+		wrongRID, wrongRIDError := origin.StorePiece(
+			context.Background(),
+			gophkeeper.Piece{
+				Meta:    "nonjson",
+				Content: []byte{},
+			},
+			credential.Password,
+		)
+		assert.Nil(t, wrongRIDError)
+		_, restoreWrongError := identity.RestorePiece(context.Background(), wrongRID, credential.Password)
+		assert.NotNil(t, restoreWrongError)
 	})
 
 	t.Run("Blob", func(t *testing.T) {
@@ -100,6 +113,19 @@ func TestEncrypted(t *testing.T) {
 
 		assert.Equal(t, "testmeta", blob.Meta, "meta is not restored correctly")
 		assert.Equal(t, "testcontent", (string)(content), "content is not restored correctly")
+
+		origin := (identity.(encrypted.Identity)).Origin
+		wrongRID, wrongRIDError := origin.StoreBlob(
+			context.Background(),
+			gophkeeper.Blob{
+				Meta:    "nonjson",
+				Content: io.NopCloser(bytes.NewReader([]byte{})),
+			},
+			credential.Password,
+		)
+		assert.Nil(t, wrongRIDError)
+		_, restoreWrongError := identity.RestoreBlob(context.Background(), wrongRID, credential.Password)
+		assert.NotNil(t, restoreWrongError)
 	})
 
 	t.Run("Delete", func(t *testing.T) {
