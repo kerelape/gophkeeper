@@ -91,6 +91,13 @@ func TestGophkeeper(t *testing.T) {
 			err := g.Register(nilContext, credential)
 			assert.NotNil(t, err)
 		})
+
+		t.Run("invalid server url", func(t *testing.T) {
+			g := g
+			g.Server = ""
+			err := g.Register(context.Background(), credential)
+			assert.NotNil(t, err)
+		})
 	})
 	t.Run("Authenticate", func(t *testing.T) {
 		_, err := g.Authenticate(context.Background(), credential)
@@ -103,6 +110,39 @@ func TestGophkeeper(t *testing.T) {
 
 		t.Run("nil context", func(t *testing.T) {
 			_, err := g.Authenticate(nilContext, credential)
+			assert.NotNil(t, err)
+		})
+
+		t.Run("invalid server url", func(t *testing.T) {
+			g := g
+			g.Server = ""
+			_, err := g.Authenticate(context.Background(), credential)
+			assert.NotNil(t, err)
+		})
+	})
+
+	t.Run("Unexpected status code", func(t *testing.T) {
+		var (
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			}))
+			client = server.Client()
+			g      = rest.Gophkeeper{
+				Client: *client,
+				Server: server.URL,
+			}
+			credential = gophkeeper.Credential{
+				Username: "test",
+				Password: "qwerty",
+			}
+		)
+
+		t.Run("Register", func(t *testing.T) {
+			err := g.Register(context.Background(), credential)
+			assert.NotNil(t, err)
+		})
+		t.Run("Authenticate", func(t *testing.T) {
+			_, err := g.Authenticate(context.Background(), credential)
 			assert.NotNil(t, err)
 		})
 	})
