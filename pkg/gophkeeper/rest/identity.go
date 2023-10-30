@@ -65,8 +65,6 @@ func (i *Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passw
 		return content.RID, nil
 	case http.StatusUnauthorized:
 		return -1, gophkeeper.ErrBadCredential
-	case http.StatusInternalServerError:
-		return -1, ErrServerIsDown
 	default:
 		return -1, errors.Join(
 			fmt.Errorf("unexpected response status: %d", response.StatusCode),
@@ -129,8 +127,6 @@ func (i *Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, 
 		return piece, nil
 	case http.StatusUnauthorized:
 		return gophkeeper.Piece{}, gophkeeper.ErrBadCredential
-	case http.StatusInternalServerError:
-		return gophkeeper.Piece{}, ErrServerIsDown
 	case http.StatusNotFound:
 		return gophkeeper.Piece{}, gophkeeper.ErrResourceNotFound
 	default:
@@ -172,8 +168,6 @@ func (i *Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password
 		return content.RID, nil
 	case http.StatusUnauthorized:
 		return -1, gophkeeper.ErrBadCredential
-	case http.StatusInternalServerError:
-		return -1, ErrServerIsDown
 	default:
 		return -1, errors.Join(
 			fmt.Errorf("unexpected response status: %d", response.StatusCode),
@@ -209,8 +203,6 @@ func (i *Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, p
 		return blob, nil
 	case http.StatusUnauthorized:
 		return gophkeeper.Blob{}, gophkeeper.ErrBadCredential
-	case http.StatusInternalServerError:
-		return gophkeeper.Blob{}, ErrServerIsDown
 	case http.StatusNotFound:
 		return gophkeeper.Blob{}, gophkeeper.ErrResourceNotFound
 	default:
@@ -242,8 +234,6 @@ func (i *Identity) Delete(ctx context.Context, rid gophkeeper.ResourceID) error 
 	switch response.StatusCode {
 	case http.StatusOK:
 		return nil
-	case http.StatusInternalServerError:
-		return ErrServerIsDown
 	case http.StatusNotFound:
 		return gophkeeper.ErrResourceNotFound
 	default:
@@ -298,8 +288,6 @@ func (i *Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 			)
 		}
 		return resources, nil
-	case http.StatusInternalServerError:
-		return nil, ErrServerIsDown
 	default:
 		return nil, errors.Join(
 			fmt.Errorf("unexpected response code: %d", response.StatusCode),
