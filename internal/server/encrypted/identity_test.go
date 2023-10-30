@@ -236,7 +236,7 @@ func TestEncrypted(t *testing.T) {
 		_, invalidPasswordError = identity.StoreBlob(context.Background(), gophkeeper.Blob{Content: io.NopCloser(strings.NewReader(""))}, "")
 		assert.NotNil(t, invalidPasswordError)
 
-		(identity.(encrypted.Identity)).Origin.StorePiece(
+		_, err := (identity.(encrypted.Identity)).Origin.StorePiece(
 			context.Background(),
 			gophkeeper.Piece{
 				Meta:    "not a json",
@@ -244,6 +244,7 @@ func TestEncrypted(t *testing.T) {
 			},
 			credential.Password,
 		)
+		assert.NotNil(t, err)
 		_, invalidContentError := identity.List(context.Background())
 		assert.NotNil(t, invalidContentError)
 	})
