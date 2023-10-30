@@ -177,9 +177,6 @@ func (i Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, pa
 // List implements gophkeeper.Identity.
 func (i Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 	resources, resourcesError := i.Origin.List(ctx)
-	if resourcesError != nil {
-		return nil, resourcesError
-	}
 	for i := range resources {
 		var (
 			resource = &resources[i]
@@ -190,7 +187,7 @@ func (i Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 		}
 		resource.Meta = m.Content
 	}
-	return resources, nil
+	return resources, resourcesError
 }
 
 // Delete implements gophkeeper.Identity.
