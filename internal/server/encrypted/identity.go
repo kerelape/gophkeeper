@@ -45,10 +45,8 @@ var _ gophkeeper.Identity = (*Identity)(nil)
 
 // StorePiece implements gophkeeper.Identity.
 func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, password string) (gophkeeper.ResourceID, error) {
-	var salt []byte = make([]byte, 8)
-	if _, err := rand.Read(salt); err != nil {
-		return -1, err
-	}
+	salt := make([]byte, 8)
+	rand.Read(salt)
 
 	block, blockError := aes.NewCipher(
 		pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New),
@@ -58,9 +56,7 @@ func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passwo
 	}
 
 	iv := make([]byte, block.BlockSize())
-	if _, err := rand.Read(iv); err != nil {
-		return -1, err
-	}
+	rand.Read(iv)
 
 	reader := cipher.StreamReader{
 		S: i.Cipher.Encrypter(block, iv),
@@ -94,21 +90,21 @@ func (i Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, p
 		return gophkeeper.Piece{}, pieceError
 	}
 
-	var meta meta
-	if err := json.Unmarshal(([]byte)(piece.Meta), &meta); err != nil {
+	var m meta
+	if err := json.Unmarshal(([]byte)(piece.Meta), &m); err != nil {
 		return gophkeeper.Piece{}, err
 	}
-	piece.Meta = meta.Content
+	piece.Meta = m.Content
 
 	block, blockError := aes.NewCipher(
-		pbkdf2.Key(([]byte)(password), meta.Salt, keyIter, keyLen, sha256.New),
+		pbkdf2.Key(([]byte)(password), m.Salt, keyIter, keyLen, sha256.New),
 	)
 	if blockError != nil {
 		return gophkeeper.Piece{}, blockError
 	}
 
 	reader := cipher.StreamReader{
-		S: i.Cipher.Decrypter(block, meta.IV),
+		S: i.Cipher.Decrypter(block, m.IV),
 		R: bytes.NewReader(piece.Content),
 	}
 	content, contentError := io.ReadAll(reader)
@@ -122,22 +118,20 @@ func (i Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, p
 
 // StoreBlob implements gophkeeper.Identity.
 func (i Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password string) (gophkeeper.ResourceID, error) {
-	var salt []byte = make([]byte, 8)
-	if _, err := rand.Read(salt); err != nil {
-		return -1, err
-	}
+	salt := make([]byte, 8)
+	rand.Read(salt)
+
 	block, blockError := aes.NewCipher(
 		pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New),
 	)
 	if blockError != nil {
 		return -1, blockError
 	}
-	var iv []byte = make([]byte, block.BlockSize())
-	if _, err := rand.Read(iv); err != nil {
-		return -1, err
-	}
 
-	meta, metaError := json.Marshal(
+	iv := make([]byte, block.BlockSize())
+	rand.Read(iv)
+
+	m, metaError := json.Marshal(
 		meta{
 			IV:      iv,
 			Salt:    salt,
@@ -151,7 +145,7 @@ func (i Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password 
 	return i.Origin.StoreBlob(
 		ctx,
 		gophkeeper.Blob{
-			Meta: (string)(meta),
+			Meta: (string)(m),
 			Content: &composedreadcloser.ComposedReadCloser{
 				Reader: cipher.StreamReader{
 					S: i.Cipher.Encrypter(
@@ -174,23 +168,23 @@ func (i Identity) RestoreBlob(ctx context.Context, rid gophkeeper.ResourceID, pa
 		return gophkeeper.Blob{}, blobError
 	}
 
-	var meta meta
-	if err := json.Unmarshal(([]byte)(blob.Meta), &meta); err != nil {
+	var m meta
+	if err := json.Unmarshal(([]byte)(blob.Meta), &m); err != nil {
 		return gophkeeper.Blob{}, err
 	}
 
 	block, blockError := aes.NewCipher(
-		pbkdf2.Key(([]byte)(password), meta.Salt, keyIter, keyLen, sha256.New),
+		pbkdf2.Key(([]byte)(password), m.Salt, keyIter, keyLen, sha256.New),
 	)
 	if blockError != nil {
 		return gophkeeper.Blob{}, blockError
 	}
 
 	decryptedBlob := gophkeeper.Blob{
-		Meta: meta.Content,
+		Meta: m.Content,
 		Content: &composedreadcloser.ComposedReadCloser{
 			Reader: cipher.StreamReader{
-				S: i.Cipher.Decrypter(block, meta.IV),
+				S: i.Cipher.Decrypter(block, m.IV),
 				R: blob.Content,
 			},
 			Closer: blob.Content,
@@ -208,12 +202,12 @@ func (i Identity) List(ctx context.Context) ([]gophkeeper.Resource, error) {
 	for i := range resources {
 		var (
 			resource = &resources[i]
-			meta     meta
+			m        meta
 		)
-		if err := json.Unmarshal(([]byte)(resource.Meta), &meta); err != nil {
+		if err := json.Unmarshal(([]byte)(resource.Meta), &m); err != nil {
 			return nil, err
 		}
-		resource.Meta = meta.Content
+		resource.Meta = m.Content
 	}
 	return resources, nil
 }
