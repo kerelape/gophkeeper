@@ -5,12 +5,12 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
 	"io"
 
 	composedreadcloser "github.com/kerelape/gophkeeper/internal/composed_read_closer"
+	encryption "github.com/kerelape/gophkeeper/internal/server/encrypted/internal"
 	"github.com/kerelape/gophkeeper/pkg/gophkeeper"
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -45,21 +45,13 @@ var _ gophkeeper.Identity = (*Identity)(nil)
 
 // StorePiece implements gophkeeper.Identity.
 func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, password string) (gophkeeper.ResourceID, error) {
-	salt := make([]byte, 8)
-	rand.Read(salt)
-
-	block, blockError := aes.NewCipher(
-		pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New),
-	)
-	if blockError != nil {
-		return -1, blockError
+	enc, encError := encryption.Password(password)
+	if encError != nil {
+		return -1, encError
 	}
 
-	iv := make([]byte, block.BlockSize())
-	rand.Read(iv)
-
 	reader := cipher.StreamReader{
-		S: i.Cipher.Encrypter(block, iv),
+		S: i.Cipher.Encrypter(enc.Block, enc.IV),
 		R: bytes.NewReader(piece.Content),
 	}
 	content, contentError := io.ReadAll(reader)
@@ -70,8 +62,8 @@ func (i Identity) StorePiece(ctx context.Context, piece gophkeeper.Piece, passwo
 
 	wrappedMeta, wrappedMetaError := json.Marshal(
 		meta{
-			IV:      iv,
-			Salt:    salt,
+			IV:      enc.IV,
+			Salt:    enc.Salt,
 			Content: piece.Meta,
 		},
 	)
@@ -118,23 +110,15 @@ func (i Identity) RestorePiece(ctx context.Context, rid gophkeeper.ResourceID, p
 
 // StoreBlob implements gophkeeper.Identity.
 func (i Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password string) (gophkeeper.ResourceID, error) {
-	salt := make([]byte, 8)
-	rand.Read(salt)
-
-	block, blockError := aes.NewCipher(
-		pbkdf2.Key(([]byte)(password), salt, keyIter, keyLen, sha256.New),
-	)
-	if blockError != nil {
-		return -1, blockError
+	enc, encError := encryption.Password(password)
+	if encError != nil {
+		return -1, encError
 	}
-
-	iv := make([]byte, block.BlockSize())
-	rand.Read(iv)
 
 	m, metaError := json.Marshal(
 		meta{
-			IV:      iv,
-			Salt:    salt,
+			IV:      enc.IV,
+			Salt:    enc.Salt,
 			Content: blob.Meta,
 		},
 	)
@@ -148,10 +132,7 @@ func (i Identity) StoreBlob(ctx context.Context, blob gophkeeper.Blob, password 
 			Meta: (string)(m),
 			Content: &composedreadcloser.ComposedReadCloser{
 				Reader: cipher.StreamReader{
-					S: i.Cipher.Encrypter(
-						block,
-						iv,
-					),
+					S: i.Cipher.Encrypter(enc.Block, enc.IV),
 					R: blob.Content,
 				},
 				Closer: blob.Content,
