@@ -38,6 +38,7 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
         version: v1.54
+        args: --print-issued-lines
 
     - name: Run coverage
       run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
