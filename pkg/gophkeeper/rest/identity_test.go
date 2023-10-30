@@ -1,8 +1,10 @@
 package rest_test
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -156,5 +158,50 @@ func TestIdentity(t *testing.T) {
 		resources, err := identity.List(context.Background())
 		assert.Nil(t, err, "did not expect an error")
 		assert.Equal(t, rescount, len(resources), "incorrect resources count")
+	})
+
+	t.Run("Invalid configuration", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		identity := rest.Identity{
+			Client: *server.Client(),
+			Server: server.URL,
+			Token:  "",
+		}
+		_, storePieceError := identity.StorePiece(context.Background(), gophkeeper.Piece{}, "")
+		assert.NotNil(t, storePieceError)
+		_, restorePieceError := identity.RestorePiece(context.Background(), 0, "")
+		assert.NotNil(t, restorePieceError)
+		_, storeBlobError := identity.StoreBlob(
+			context.Background(),
+			gophkeeper.Blob{Content: io.NopCloser(bytes.NewReader([]byte{}))},
+			"",
+		)
+		assert.NotNil(t, storeBlobError)
+		_, restoreBlobError := identity.RestoreBlob(context.Background(), 0, "")
+		assert.NotNil(t, restoreBlobError)
+		_, listError := identity.List(context.Background())
+		assert.NotNil(t, listError)
+		deleteError := identity.Delete(context.Background(), 0)
+		assert.NotNil(t, deleteError)
+	})
+	t.Run("nil context", func(t *testing.T) {
+		_, storePieceError := identity.StorePiece(nilContext, gophkeeper.Piece{}, credential.Password)
+		assert.NotNil(t, storePieceError)
+		_, storeBlobError := identity.StoreBlob(
+			nilContext,
+			gophkeeper.Blob{Content: io.NopCloser(bytes.NewReader([]byte{}))},
+			credential.Password,
+		)
+		assert.NotNil(t, storeBlobError)
+		_, restorePieceError := identity.RestorePiece(nilContext, 0, credential.Password)
+		assert.NotNil(t, restorePieceError)
+		_, restoreBlobError := identity.RestoreBlob(nilContext, 0, credential.Password)
+		assert.NotNil(t, restoreBlobError)
+		_, listError := identity.List(nilContext)
+		assert.NotNil(t, listError)
+		deleteError := identity.Delete(nilContext, 0)
+		assert.NotNil(t, deleteError)
 	})
 }
