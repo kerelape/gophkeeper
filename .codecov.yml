@@ -1,0 +1,10 @@
+codecov:
+  bot: "codecov-io"
+
+coverage:
+  precision: 2
+  round: down
+  range: "80...100"
+  status:
+    project: off
+    patch: off
