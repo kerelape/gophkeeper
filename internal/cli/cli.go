@@ -57,27 +57,29 @@ func (c *CLI) Run(ctx context.Context) error {
 			gophkeeper: c.Gophkeeper,
 		},
 	}
-	if len(c.CommandLine) < 1 {
-		return errors.New("command not specified")
-	}
-	if c.CommandLine[0] == "help" {
+
+	if (len(c.CommandLine) < 1) || (c.CommandLine[0] == "help") {
 		for n, c := range commands {
 			fmt.Printf("%s %s - %s\n", n, c.Help(), c.Description())
 		}
-		return nil
+		return errors.New("command not specified")
 	}
+
 	if command, ok := commands[c.CommandLine[0]]; ok {
 		var (
 			input = (stack.Stack[string])(c.CommandLine[1:])
 			args  = make(stack.Stack[string], 0, len(input))
 		)
+
 		for len(input) > 0 {
 			args.Push(input.Pop())
 		}
+
 		correct, err := command.Execute(ctx, args)
 		if !correct {
 			fmt.Printf("%s %s\n", c.CommandLine[0], command.Help())
 		}
+
 		if err != nil {
 			return fmt.Errorf("failed to execute command %s: %w", c.CommandLine[0], err)
 		}
