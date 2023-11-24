@@ -8,7 +8,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
+env:
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -38,6 +39,7 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
         version: v1.54
+        args: --print-issued-lines
 
     - name: Run coverage
       run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
